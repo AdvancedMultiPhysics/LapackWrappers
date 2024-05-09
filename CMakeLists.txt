@@ -9,7 +9,8 @@ MESSAGE("================")
 
 
 # Set the project name
-SET( PROJ LapackWrappers )
+SET( PROJ LapackWrappers )                  # Set the project name for CMake
+SET( LapackWrappers_LIB LapackWrappers )    # Set the final library name
 
 
 # Initialize the project (should disable langagues that the TPL builder will enable)
@@ -50,6 +51,15 @@ ENABLE_TESTING()
 INCLUDE( CTest )
 
 
+# Create custom targets for distclean
+ADD_DISTCLEAN( libLapackWrappers.a libLapackWrappers.so )
+
+
+# Create a release target
+WRITE_REPO_VERSION()
+CREATE_RELEASE()
+
+
 # Install the library
 FILE( COPY "${${PROJ}_SOURCE_DIR}/LapackWrappers.h" DESTINATION "${${PROJ}_INSTALL_DIR}/include" )
 CHECK_ENABLE_FLAG( DISABLE_BLAS 0 )
@@ -65,4 +75,6 @@ TARGET_LINK_LIBRARIES( LapackWrappers ${TPL_LIBRARIES} )
 INSTALL( TARGETS LapackWrappers DESTINATION "${${PROJ}_INSTALL_DIR}/lib" )
 
 
+# Add the tests
+ADD_SUBDIRECTORY( test )
 
