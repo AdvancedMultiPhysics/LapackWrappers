@@ -444,7 +444,7 @@ void Lapack<double>::getrs( char TRANS, int N, int NRHS, const double *A, int LD
     ( &TRANS, &N, &NRHS, (double *) A, &LDA, (int *) IPIV, B, &LDB, &INFO );
 #elif defined( USE_OPENBLAS )
     FORTRAN_WRAPPER( ::dgetrs )
-    ( &TRANS, &N, &NRHS, (double *) A, &LDA, (int *) IPIV, B, &LDB, &INFO );
+    ( &TRANS, &N, &NRHS, (double *) A, &LDA, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, NRHSp = NRHS, LDAp = LDA, LDBp = LDB, INFOp;
     ptrdiff_t *IPIVp = new ptrdiff_t[N];
@@ -476,7 +476,7 @@ void Lapack<double>::gttrs( char TRANS, int N, int NRHS, const double *DL, const
 #elif defined( USE_OPENBLAS )
     FORTRAN_WRAPPER( ::dgttrs )
     ( &TRANS, &N, &NRHS, (double *) DL, (double *) D, (double *) DU, (double *) DU2, (int *) IPIV,
-        B, &LDB, &INFO );
+        B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, NRHSp = NRHS, LDBp = LDB, INFOp;
     ptrdiff_t *IPIVp = new ptrdiff_t[N];
@@ -507,7 +507,7 @@ void Lapack<double>::gbtrs( char TRANS, int N, int KL, int KU, int NRHS, const d
     ( &TRANS, &N, &KL, &KU, &NRHS, (double *) AB, &LDAB, (int *) IPIV, B, &LDB, &INFO );
 #elif defined( USE_OPENBLAS )
     FORTRAN_WRAPPER( ::dgbtrs )
-    ( &TRANS, &N, &KL, &KU, &NRHS, (double *) AB, &LDAB, (int *) IPIV, B, &LDB, &INFO );
+    ( &TRANS, &N, &KL, &KU, &NRHS, (double *) AB, &LDAB, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, KLp = KL, KUp = KU, NRHSp = NRHS, LDABp = LDAB, LDBp = LDB, INFOp;
     ptrdiff_t *IPIVp = new ptrdiff_t[N];
