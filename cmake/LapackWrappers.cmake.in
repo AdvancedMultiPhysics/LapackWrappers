@@ -1,0 +1,11 @@
+SET( LapackWrappers_VERSION @LapackWrappers_VERSION@ )
+
+@PACKAGE_INIT@
+
+SET_AND_CHECK( LapackWrappers_INCLUDE_DIR "@LapackWrappers_INSTALL_DIR@/lib")
+
+INCLUDE( "${CMAKE_CURRENT_LIST_DIR}/LapackWrappersTargets.cmake" )
+INCLUDE_DIRECTORIES( ${LapackWrappers_INCLUDE_DIR} )
+
+CHECK_REQUIRED_COMPONENTS( LapackWrappers )
+

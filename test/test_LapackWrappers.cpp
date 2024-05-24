@@ -107,7 +107,8 @@ int runBasic( bool print_all )
 template<class TYPE>
 int runPerformance( bool print_all, int N_test )
 {
-    if ( print_all ) printf( "\nGetting %s precision test times\n", getTypeString<TYPE>() );
+    if ( print_all )
+        printf( "\nGetting %s precision test times\n", getTypeString<TYPE>() );
     auto tests = Lapack<TYPE>::list_all_tests();
     std::vector<double> error( tests.size() );
     std::vector<int> time( tests.size() );
@@ -147,7 +148,8 @@ int runAll( bool print_all )
 
     // Run the tests in parallel to check for parallel bugs
     {
-        if ( print_all ) printf( "\nRunning parallel tests\n" );
+        if ( print_all )
+            printf( "\nRunning parallel tests\n" );
         int N_threads = 8;
         auto tests    = Lapack<double>::list_all_tests();
         for ( auto &test : tests ) {
@@ -195,7 +197,8 @@ int main( int argc, char *argv[] )
     Lapack<double>::set_num_threads( 1 );
 
     // Print the lapack version
-    if ( print ) std::cout << Lapack<double>::info();
+    if ( print )
+        std::cout << Lapack<double>::info();
 
     // Run the tests
     int N_errors = 0;

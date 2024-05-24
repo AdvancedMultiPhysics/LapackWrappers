@@ -1,5 +1,6 @@
 # Set some CMake properties
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
+CMAKE_POLICY( SET CMP0069 NEW )
 
 
 # Print a banner
@@ -13,7 +14,7 @@ SET( PROJ LapackWrappers )                  # Set the project name for CMake
 SET( LapackWrappers_LIB LapackWrappers )    # Set the final library name
 
 
-# Initialize the project (should disable langagues that the TPL builder will enable)
+# Initialize the project (should disable languages that the TPL builder will enable)
 PROJECT( ${PROJ} LANGUAGES )
 
 
@@ -32,18 +33,34 @@ SET( ${PROJ}_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 MESSAGE("Installing LapackWrappers in: ${CMAKE_INSTALL_PREFIX}")
 
 
-# Load the TPL package
-IF ( NOT TPL_DIRECTORY )
-    MESSAGE( FATAL_ERROR "TPL_DIRECTORY must be specified")
+# Set sared/static library
+IF ( ENABLE_SHARED )
+    SET( LIB_TYPE SHARED )
+ELSE()
+    SET( LIB_TYPE STATIC )
 ENDIF()
-SET( CMAKE_MODULE_PATH "${TPL_DIRECTORY}" ${CMAKE_MODULE_PATH} )
-FIND_PACKAGE( TPLs REQUIRED COMPONENTS LAPACK )
-SET( CMAKE_INSTALL_RPATH "${${PROJ}_INSTALL_DIR}/lib" "${BLAS_DIR}" "${LAPACK_DIR}" ${CMAKE_INSTALL_RPATH} )
 
 
-# Include the TPL inclde paths and libraries
-INCLUDE_DIRECTORIES( ${TPL_INCLUDE_DIRS} )
-SET( TPL_LIBS ${TPL_LIBRARIES} )
+# Find blas/lapack
+IF ( TPL_DIRECTORY )
+    # Use the TPL package to specify blas/lapack
+    SET( CMAKE_MODULE_PATH "${TPL_DIRECTORY}" ${CMAKE_MODULE_PATH} )
+    FIND_PACKAGE( TPLs REQUIRED COMPONENTS LAPACK )
+    SET( CMAKE_INSTALL_RPATH "${BLAS_DIR}" "${LAPACK_DIR}" ${CMAKE_INSTALL_RPATH} )
+ELSE()
+    # Find Blas/Lapack
+    ENABLE_LANGUAGE( CXX )
+    SET( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH} )
+    FIND_PACKAGE( BlasLapack )
+    INCLUDE( cmake/macros.cmake )
+    INCLUDE( cmake/WriteRepoVersion.cmake )
+ENDIF()
+INCLUDE( cmake/WriteLapackHeader.cmake )
+INCLUDE_DIRECTORIES( "${CMAKE_INSTALL_PREFIX}/include" )
+
+
+# Update rpath
+SET( CMAKE_INSTALL_RPATH "${${PROJ}_INSTALL_DIR}/lib" ${CMAKE_INSTALL_RPATH} )
 
 
 # Enable tests
@@ -52,7 +69,7 @@ INCLUDE( CTest )
 
 
 # Create custom targets for distclean
-ADD_DISTCLEAN( libLapackWrappers.a libLapackWrappers.so )
+ADD_DISTCLEAN( libLapackWrappers.a libLapackWrappers.so blas_lapack.h LapackWrappers-*.*.*.tar.gz )
 
 
 # Create a release target
@@ -71,9 +88,30 @@ ELSE()
     SET( LapackWrappersSource LapackWrappers.cpp LapackWrappers.double.cpp LapackWrappers.float.cpp LapackWrappers.complex.cpp LapackWrappersInfo.cpp LapackWrappersMachineParams.cpp )
 ENDIF()
 ADD_LIBRARY( LapackWrappers ${LIB_TYPE} ${LapackWrappersSource} )
-TARGET_LINK_LIBRARIES( LapackWrappers ${TPL_LIBRARIES} )
-INSTALL( TARGETS LapackWrappers DESTINATION "${${PROJ}_INSTALL_DIR}/lib" )
+TARGET_LINK_LIBRARIES( LapackWrappers ${BLAS_LAPACK_LINK} )
+INSTALL( TARGETS LapackWrappers EXPORT LapackWrappersTargets DESTINATION "${${PROJ}_INSTALL_DIR}/lib" )
+INSTALL( EXPORT LapackWrappersTargets
+         FILE LapackWrappersTargets.cmake
+         NAMESPACE LapackWrappers::
+         DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake
+)
 
+
+# Generating a Package Configuration File
+INCLUDE( CMakePackageConfigHelpers )
+SET( INCLUDE_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Location of header files" )
+SET( SYSCONFIG_INSTALL_DIR ${${PROJ}_INSTALL_DIR}/lib/cmake CACHE PATH "Location of configuration files" )
+CONFIGURE_PACKAGE_CONFIG_FILE( cmake/LapackWrappers.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake
+    INSTALL_DESTINATION "${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers"
+    PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR )
+WRITE_BASIC_PACKAGE_VERSION_FILE(
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersVersion.cmake
+    VERSION ${${PROJ}_VERSION}
+    COMPATIBILITY SameMajorVersion )
+INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersVersion.cmake
+         DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake )
 
 # Add the tests
 ADD_SUBDIRECTORY( test )
