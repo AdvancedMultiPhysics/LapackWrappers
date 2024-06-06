@@ -42,10 +42,16 @@ ENDIF()
 
 
 # Find blas/lapack
-IF ( TPL_DIRECTORY )
+IF ( DISABLE_BLAS OR DISABLE_LAPACK )
+    # Configuring without lapack/blas
+    ENABLE_LANGUAGE( CXX )
+    INCLUDE( cmake/macros.cmake )
+    INCLUDE( cmake/WriteRepoVersion.cmake )
+ELSEIF ( TPL_DIRECTORY )
     # Use the TPL package to specify blas/lapack
     FIND_PACKAGE( TPLs REQUIRED COMPONENTS LAPACK PATHS "${TPL_DIRECTORY}" )
     SET( CMAKE_INSTALL_RPATH "${BLAS_DIR}" "${LAPACK_DIR}" ${CMAKE_INSTALL_RPATH} )
+    INCLUDE( cmake/WriteLapackHeader.cmake )
 ELSE()
     # Find Blas/Lapack
     ENABLE_LANGUAGE( CXX )
@@ -53,8 +59,8 @@ ELSE()
     FIND_PACKAGE( BlasLapack )
     INCLUDE( cmake/macros.cmake )
     INCLUDE( cmake/WriteRepoVersion.cmake )
+    INCLUDE( cmake/WriteLapackHeader.cmake )
 ENDIF()
-INCLUDE( cmake/WriteLapackHeader.cmake )
 INCLUDE_DIRECTORIES( "${CMAKE_INSTALL_PREFIX}/include" )
 
 
