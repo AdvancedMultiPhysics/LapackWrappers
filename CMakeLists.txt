@@ -69,7 +69,6 @@ SET( CMAKE_INSTALL_RPATH "${${PROJ}_INSTALL_DIR}/lib" ${CMAKE_INSTALL_RPATH} )
 
 
 # Enable tests
-ENABLE_TESTING()
 INCLUDE( CTest )
 
 
@@ -119,5 +118,6 @@ INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake
          DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake )
 
 # Add the tests
-ADD_SUBDIRECTORY( test )
-
+IF (BUILD_TESTING)
+    ADD_SUBDIRECTORY( test )
+ENDIF()
