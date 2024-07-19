@@ -104,7 +104,7 @@ INSTALL( EXPORT LapackWrappersTargets
 # Generating a Package Configuration File
 INCLUDE( CMakePackageConfigHelpers )
 SET( INCLUDE_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Location of header files" )
-SET( SYSCONFIG_INSTALL_DIR ${${PROJ}_INSTALL_DIR}/lib/cmake CACHE PATH "Location of configuration files" )
+SET( SYSCONFIG_INSTALL_DIR ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers CACHE PATH "Location of configuration files" )
 CONFIGURE_PACKAGE_CONFIG_FILE( cmake/LapackWrappers.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake
     INSTALL_DESTINATION "${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers"
@@ -115,7 +115,7 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
     COMPATIBILITY SameMajorVersion )
 INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake
                ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersVersion.cmake
-         DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake )
+         DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers )
 
 # Add the tests
 IF (BUILD_TESTING)
