@@ -97,7 +97,7 @@ INSTALL( TARGETS LapackWrappers EXPORT LapackWrappersTargets DESTINATION "${${PR
 INSTALL( EXPORT LapackWrappersTargets
          FILE LapackWrappersTargets.cmake
          NAMESPACE LapackWrappers::
-         DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake
+         DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers
 )
 
 
