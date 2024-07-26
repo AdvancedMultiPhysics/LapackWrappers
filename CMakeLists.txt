@@ -31,9 +31,10 @@ ENDIF()
 SET( ${PROJ}_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} )
 SET( ${PROJ}_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 MESSAGE("Installing LapackWrappers in: ${CMAKE_INSTALL_PREFIX}")
+SET( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH} )
 
 
-# Set sared/static library
+# Set shared/static library
 IF ( ENABLE_SHARED )
     SET( LIB_TYPE SHARED )
 ELSE()
@@ -55,7 +56,6 @@ ELSEIF ( TPL_DIRECTORY )
 ELSE()
     # Find Blas/Lapack
     ENABLE_LANGUAGE( CXX )
-    SET( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH} )
     FIND_PACKAGE( BlasLapack )
     INCLUDE( cmake/macros.cmake )
     INCLUDE( cmake/WriteRepoVersion.cmake )
