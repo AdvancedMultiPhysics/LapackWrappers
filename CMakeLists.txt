@@ -72,8 +72,19 @@ SET( CMAKE_INSTALL_RPATH "${${PROJ}_INSTALL_DIR}/lib" ${CMAKE_INSTALL_RPATH} )
 INCLUDE( CTest )
 
 
-# Create custom targets for distclean
+# Add distclean target
 ADD_DISTCLEAN( libLapackWrappers.a libLapackWrappers.so blas_lapack.h LapackWrappers-*.*.*.tar.gz )
+
+
+# Check if we want to enable coverage
+IF ( ENABLE_GCOV OR ENABLE_COVERAGE )
+    FIND_PACKAGE( Coverage )
+ENDIF()
+IF ( COVERAGE_FOUND )
+    SET( ENABLE_COVERAGE true )
+    SET( COVERAGE_FLAGS ${COVERAGE_FLAGS} )
+    SET( COVERAGE_LIBS  ${COVERAGE_LIBS} )
+ENDIF()
 
 
 # Create a release target
@@ -91,14 +102,18 @@ IF ( DISABLE_BLAS OR DISABLE_LAPACK )
 ELSE()
     SET( LapackWrappersSource LapackWrappers.cpp LapackWrappers.double.cpp LapackWrappers.float.cpp LapackWrappers.complex.cpp LapackWrappersInfo.cpp LapackWrappersMachineParams.cpp )
 ENDIF()
+
+
+# Add library
 ADD_LIBRARY( LapackWrappers ${LIB_TYPE} ${LapackWrappersSource} )
-TARGET_LINK_LIBRARIES( LapackWrappers ${BLAS_LAPACK_LINK} )
+TARGET_LINK_LIBRARIES( LapackWrappers ${BLAS_LAPACK_LINK} ${COVERAGE_LIBS} )
 INSTALL( TARGETS LapackWrappers EXPORT LapackWrappersTargets DESTINATION "${${PROJ}_INSTALL_DIR}/lib" )
 INSTALL( EXPORT LapackWrappersTargets
          FILE LapackWrappersTargets.cmake
          NAMESPACE LapackWrappers::
          DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers
 )
+TARGET_COMPILE_DEFINITIONS( LapackWrappers PUBLIC ${COVERAGE_FLAGS} )
 
 
 # Generating a Package Configuration File
@@ -116,6 +131,7 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
 INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake
                ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersVersion.cmake
          DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers )
+
 
 # Add the tests
 IF (BUILD_TESTING)

@@ -34,6 +34,7 @@ SET( MPIEXEC             $ENV{MPIEXEC}             )
 SET( BUILD_SERIAL        $ENV{BUILD_SERIAL}        )
 SET( SKIP_TESTS          $ENV{SKIP_TESTS}          )
 SET( BUILDNAME_POSTFIX  "$ENV{BUILDNAME_POSTFIX}"  )
+SET( CTEST_SITE         "$ENV{CTEST_SITE}"         )
 SET( CTEST_URL          "$ENV{CTEST_URL}"          )
 SET( TPL_DIRECTORY      "$ENV{TPL_DIRECTORY}"      )
 SET( MKL_INCLUDE_DIR    "$ENV{MKL_INCLUDE_DIR}"    )
@@ -94,23 +95,18 @@ ENDIF()
 
 
 # Set the number of processors
-IF( NOT DEFINED N_PROCS )
-    SET( N_PROCS $ENV{N_PROCS} )
-ENDIF()
+SET( N_PROCS $ENV{N_PROCS} )
 IF ( NOT DEFINED N_PROCS )
-    SET(N_PROCS 1)
-    # Linux:
-    SET(cpuinfo_file "/proc/cpuinfo")
-    IF(EXISTS "${cpuinfo_file}")
-        FILE(STRINGS "${cpuinfo_file}" procs REGEX "^processor.: [0-9]+$")
-        list(LENGTH procs N_PROCS)
-    ENDIF()
-    # Mac:
-    IF(APPLE)
-        find_program(cmd_sys_pro "sysctl")
-        if(cmd_sys_pro)
-            execute_process(COMMAND ${cmd_sys_pro} hw.physicalcpu OUTPUT_VARIABLE info)
-            STRING(REGEX REPLACE "^.*hw.physicalcpu: ([0-9]+).*$" "\\1" N_PROCS "${info}")
+    SET( N_PROCS 1 ) # Default number of processor if all else fails
+    IF ( EXISTS "/proc/cpuinfo" )
+        # Linux
+        FILE( STRINGS "/proc/cpuinfo" procs REGEX "^processor.: [0-9]+$" )
+        LIST( LENGTH procs N_PROCS )
+    ELSEIF( APPLE )
+        FIND_PROGRAM( cmd_sys_pro "system_profiler" )
+        IF ( cmd_sys_pro )
+            EXECUTE_PROCESS( COMMAND ${cmd_sys_pro} OUTPUT_VARIABLE info )
+            STRING( REGEX REPLACE "^.*Total Number of Cores: ([0-9]+).*$" "\\1" N_PROCS "${info}" )
         ENDIF()
     ENDIF()
     # Windows:
@@ -151,8 +147,6 @@ SET( CTEST_CUSTOM_ERROR_EXCEPTION )
 
 # Set timeouts: 5 minutes for debug, 2 for opt, and 30 minutes for valgrind/weekly
 IF ( USE_VALGRIND )
-    SET( CTEST_TEST_TIMEOUT 1800 )
-ELSEIF ( RUN_WEEKLY )
     SET( CTEST_TEST_TIMEOUT 1800 )
 ELSEIF( ${CMAKE_BUILD_TYPE} STREQUAL "Debug" )
     SET( CTEST_TEST_TIMEOUT 300 )
