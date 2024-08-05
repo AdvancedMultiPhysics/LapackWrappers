@@ -1,6 +1,7 @@
 #include "LapackWrappers.h"
 #include "blas_lapack.h"
 
+#include <cstring>
 #include <complex>
 #include <mutex>
 #include <stdexcept>
@@ -12,6 +13,13 @@ typedef MKL_Complex16 Complex;
 #else
 typedef double _Complex Complex;
 #endif
+static inline Complex convert( const std::complex<double> &x )
+{
+    static_assert( sizeof( std::complex<double> ) == sizeof( Complex ) );
+    Complex y;
+    memcpy( &y, &x, sizeof( Complex ) );
+    return y;
+}
 
 
 // Define macro to handle name mangling
@@ -180,7 +188,7 @@ template<>
 void Lapack<std::complex<double>>::axpy( int N, std::complex<double> DA_,
     const std::complex<double> *DX_, int INCX, std::complex<double> *DY_, int INCY )
 {
-    auto DA = reinterpret_cast<Complex &>( DA_ );
+    auto DA = convert( DA_ );
     auto DX = reinterpret_cast<const Complex *>( DX_ );
     auto DY = reinterpret_cast<Complex *>( DY_ );
 #ifdef USE_ATLAS
@@ -204,8 +212,8 @@ void Lapack<std::complex<double>>::gemv( char TRANS, int M, int N, std::complex<
     const std::complex<double> *A_, int LDA, const std::complex<double> *DX_, int INCX,
     std::complex<double> BETA_, std::complex<double> *DY_, int INCY )
 {
-    auto ALPHA = reinterpret_cast<Complex &>( ALPHA_ );
-    auto BETA  = reinterpret_cast<Complex &>( BETA_ );
+    auto ALPHA = convert( ALPHA_ );
+    auto BETA  = convert( BETA_ );
     auto A     = reinterpret_cast<const Complex *>( A_ );
     auto DX    = reinterpret_cast<const Complex *>( DX_ );
     auto DY    = reinterpret_cast<Complex *>( DY_ );
@@ -239,8 +247,8 @@ void Lapack<std::complex<double>>::gemm( char TRANSA, char TRANSB, int M, int N,
     const std::complex<double> *B_, int LDB, std::complex<double> BETA_, std::complex<double> *C_,
     int LDC )
 {
-    auto ALPHA = reinterpret_cast<Complex &>( ALPHA_ );
-    auto BETA  = reinterpret_cast<Complex &>( BETA_ );
+    auto ALPHA = convert( ALPHA_ );
+    auto BETA  = convert( BETA_ );
     auto A     = reinterpret_cast<const Complex *>( A_ );
     auto B     = reinterpret_cast<const Complex *>( B_ );
     auto C     = reinterpret_cast<Complex *>( C_ );
@@ -328,7 +336,7 @@ void Lapack<std::complex<double>>::ger( int N, int M, std::complex<double> ALPHA
     const std::complex<double> *x_, int INCX, const std::complex<double> *y_, int INCY,
     std::complex<double> *A_, int LDA )
 {
-    auto ALPHA = reinterpret_cast<Complex &>( ALPHA_ );
+    auto ALPHA = convert( ALPHA_ );
     auto x     = reinterpret_cast<const Complex *>( x_ );
     auto y     = reinterpret_cast<const Complex *>( y_ );
     auto A     = reinterpret_cast<Complex *>( A_ );
@@ -644,7 +652,7 @@ void Lapack<std::complex<double>>::trsm( char SIDE, char UPLO, char TRANS, char 
     std::complex<double> ALPHA_, const std::complex<double> *A_, int LDA, std::complex<double> *B_,
     int LDB )
 {
-    auto ALPHA = reinterpret_cast<Complex &>( ALPHA_ );
+    auto ALPHA = convert( ALPHA_ );
     auto A     = reinterpret_cast<const Complex *>( A_ );
     auto B     = reinterpret_cast<Complex *>( B_ );
 #ifdef USE_ATLAS
