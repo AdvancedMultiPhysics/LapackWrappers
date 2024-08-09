@@ -1,0 +1,245 @@
+# To run valgrind:
+# valgrind --leak-check=yes --show-reachable=yes --track-origins=yes --suppressions=ValgrindSuppresionFile --log-file=memory.log ./test_LapackWrappers
+# valgrind --leak-check=yes --show-reachable=yes --track-origins=yes --suppressions=ValgrindSuppresionFile --gen-suppressions=all --log-file=memory.log ./test_LapackWrappers
+#
+# For slightly better performance:
+# valgrind --leak-check=yes --show-reachable=yes --suppressions=ValgrindSuppresionFile --log-file=memory.log ./test_LapackWrappers
+
+
+
+
+#### Supress std::ios_base::sync_with_stdio memory errors
+{
+   std/ios_base/sync_with_stdio
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/libstdc++.so.6.0.13
+   fun:_ZNSt8ios_base15sync_with_stdioEb
+   ...
+}
+
+
+#### Supress static_initialization_and_destruction
+{
+   static_initialization_and_destruction
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_Z41__static_initialization_and_destruction_0ii
+   ...
+}
+
+
+#### Supress MPI memory errors
+{
+   mpichInitThread
+   Memcheck:Leak
+   ...
+   fun:PMPI_Init_thread
+   fun:_ZN3AMP7AMP_MPI9start_MPIERiPPci
+   ...
+}
+
+
+#### Supress nvidia errors
+{
+   libnvidia-opencl
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.*
+   ...
+}
+
+
+#### Suppress all libgfortran errors
+{
+   LibGFortranCond
+    Memcheck:Cond
+   ...
+   obj:/usr/lib/libgfortran.so.3.0.0
+   ...
+}
+{
+   LibGFortranAddr
+   Memcheck:Addr8
+   ...
+   obj:/usr/lib/libgfortran.so.3.0.0
+   ...
+}
+{
+   LibGFortranLeak
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/libgfortran.so.3.0.0
+   ...
+}
+
+
+#### Suppress ACML errors
+{
+   acmlcpuid1
+   Memcheck:Cond
+   ...
+   fun:acmlcpuid2
+   ...
+}
+{
+   acmlcpuid2
+   Memcheck:Value8
+   ...
+   fun:acmlcpuid_once
+   fun:acmlcpuid2
+   ...
+}
+
+
+#### Supress Mac errors
+{
+   Mac/dyld_start/dyldbootstrap5start
+   Memcheck:Leak
+   ...
+   fun:_ZN13dyldbootstrap5startEPK12macho_headeriPPKcl
+   fun:_dyld_start
+}
+{
+   Mac/throw/unwind
+   Memcheck:Leak
+   ...
+   fun:unwind_phase2
+   fun:_Unwind_RaiseException
+   fun:__cxa_throw
+   ...
+}
+{
+   Mac/throw/unwind_Raise
+   Memcheck:Leak
+   ...
+   fun:_Unwind_RaiseException
+   fun:__cxa_throw
+   ...
+}
+{
+   Mac/allocate_exception
+   Memcheck:Leak
+   fun:malloc
+   fun:__emutls_get_address
+   fun:__cxa_get_globals
+   fun:__cxa_allocate_exception
+   ...
+}
+{
+   Max/printf
+   Memcheck:Leak
+   fun:malloc
+   fun:__Balloc_D2A
+   ...
+   fun:__dtoa
+   fun:__vfprintf
+   fun:__vfprintf
+   fun:vfprintf_l
+   fun:printf
+   ...
+}
+{
+   printfLeak
+   Memcheck:Leak
+   ...
+   fun:malloc
+   fun:__Balloc_D2A
+   ...
+   fun:__dtoa
+   fun:__vfprintf
+   fun:vsnprintf
+   ...
+}
+{
+   demangeLeak
+   Memcheck:Leak
+   ...
+   fun:malloc
+   fun:realloc
+   ...
+   fun:__cxa_demangle
+   ...
+}
+{
+   Mac/atexit
+   Memcheck:Leak
+   fun:malloc
+   fun:atexit_register
+   fun:__cxa_atexit
+   ...
+}
+{
+   Mac/initializer
+   Memcheck:Leak
+   ...
+   fun:_libxpc_initializer
+   fun:libSystem_initializer
+   ...
+}
+{
+   Mac/initializer2
+   Memcheck:Leak
+   ...
+   fun:libSystem_initializer
+   fun:_ZN16ImageLoaderMachO18doModInitFunctionsERKN11ImageLoader11LinkContextE
+   ...
+}
+{
+   Mac/printf
+   Memcheck:Leak
+   ...
+   fun:vfprintf_l
+   fun:printf
+   ...
+}
+{
+   Mac/lookupMethod
+   Memcheck:Leak
+   ...
+   fun:lookUpMethod
+   fun:objc_msgSend
+   ...
+}
+{
+   Mac\si_module_with_name
+   Memcheck:Leak
+   ...
+   fun:si_module_with_name
+   ...
+}
+{
+   Mac\map_images
+   Memcheck:Leak
+   ...
+   fun:map_images_nolock
+   fun:map_images
+   ...
+}
+
+
+# Supress linux errors 
+{
+   expand_dynamic_string_token
+   Memcheck:Cond
+   fun:index
+   fun:expand_dynamic_string_token
+   ...
+   fun:dl_main
+   fun:_dl_sysdep_start
+   fun:_dl_start
+   ...
+}
+{
+   call_init
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:call_init
+   fun:_dl_init
+   ...
+}
+
+
