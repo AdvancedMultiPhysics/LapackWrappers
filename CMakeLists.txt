@@ -64,6 +64,23 @@ ENDIF()
 INCLUDE_DIRECTORIES( "${CMAKE_INSTALL_PREFIX}/include" )
 
 
+# Set system specific libraries
+# This should move inside the finds for specific lapack libraries
+IF ( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
+    # Windows specific system libraries
+ELSEIF( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+    # Linux specific system libraries
+    SET( SYSTEM_LIBS -lpthread -ldl )
+ELSEIF( ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" )
+    # Max specific system libraries
+    SET( SYSTEM_LIBS -lpthread -ldl )
+ELSEIF( ${CMAKE_SYSTEM_NAME} STREQUAL "Generic" )
+    # Generic system libraries
+ELSE()
+    MESSAGE( FATAL_ERROR "OS not detected" )
+ENDIF()
+
+
 # Update rpath
 SET( CMAKE_INSTALL_RPATH "${${PROJ}_INSTALL_DIR}/lib" ${CMAKE_INSTALL_RPATH} )
 
@@ -106,7 +123,7 @@ ENDIF()
 
 # Add library
 ADD_LIBRARY( LapackWrappers ${LIB_TYPE} ${LapackWrappersSource} )
-TARGET_LINK_LIBRARIES( LapackWrappers ${BLAS_LAPACK_LINK} ${COVERAGE_LIBS} )
+TARGET_LINK_LIBRARIES( LapackWrappers ${BLAS_LAPACK_LINK} ${COVERAGE_LIBS} ${SYSTEM_LIBS} )
 INSTALL( TARGETS LapackWrappers EXPORT LapackWrappersTargets DESTINATION "${${PROJ}_INSTALL_DIR}/lib" )
 INSTALL( EXPORT LapackWrappersTargets
          FILE LapackWrappersTargets.cmake
