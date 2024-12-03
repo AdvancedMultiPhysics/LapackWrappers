@@ -92,6 +92,7 @@ int runBasic( bool print_all )
         printf( "   %s", tests[0].data() );
         for ( size_t i = 1; i < tests.size(); i++ )
             printf( ", %s", tests[i].data() );
+        printf( "\n" );
     }
     int N_errors = Lapack<TYPE>::run_all_test();
     if ( N_errors == 0 && print_all ) {

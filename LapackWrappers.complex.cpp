@@ -1,8 +1,8 @@
 #include "LapackWrappers.h"
 #include "blas_lapack.h"
 
-#include <cstring>
 #include <complex>
+#include <cstring>
 #include <mutex>
 #include <stdexcept>
 
@@ -603,8 +603,8 @@ void Lapack<std::complex<double>>::gbtrs( char TRANS, int N, int KL, int KU, int
         &INFO );
 #elif defined( USE_OPENBLAS )
     FORTRAN_WRAPPER( ::zgbtrs )
-    ( &TRANS, &N, &KL, &KU, &NRHS, const_cast<Complex *>( AB ), &LDAB, (int *) IPIV, B, &LDB,
-        &INFO, 1 );
+    ( &TRANS, &N, &KL, &KU, &NRHS, const_cast<Complex *>( AB ), &LDAB, (int *) IPIV, B, &LDB, &INFO,
+        1 );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, KLp = KL, KUp = KU, NRHSp = NRHS, LDABp = LDAB, LDBp = LDB, INFOp;
     ptrdiff_t *IPIVp = new ptrdiff_t[N];

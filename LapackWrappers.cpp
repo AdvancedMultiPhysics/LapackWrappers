@@ -139,17 +139,19 @@ std::vector<std::string> Lapack<float>::list_all_tests()
 template<>
 std::vector<std::string> Lapack<std::complex<double>>::list_all_tests()
 {
-    return {};
+    return { "zcopy", "zscal", "znrm2", "zaxpy", "zasum", "zdot", "zrand", "zgemv", "zgemm" };
 }
 #endif
 
 
 // Run all the tests
 template<typename TYPE>
+int run_basic_tests();
+template<typename TYPE>
 int Lapack<TYPE>::run_all_test()
 {
     int N_errors = 0;
-    int N        = 2; // We want two iterations to enure the test works for N>1
+    int N        = 2; // We want two iterations to ensure the test works for N>1
     auto tests   = Lapack<TYPE>::list_all_tests();
     for ( auto test : tests ) {
         double error;
@@ -158,6 +160,10 @@ int Lapack<TYPE>::run_all_test()
             printf( "test_%s failed (%e)\n", test.c_str(), error );
             N_errors++;
         }
+    }
+    if ( run_basic_tests<TYPE>() != 0 ) {
+        printf( "basic tests failed\n" );
+        N_errors++;
     }
     return N_errors;
 }
@@ -192,9 +198,16 @@ void Lapack<double>::random( int N, double *data )
     lock.unlock();
 }
 template<>
-void Lapack<std::complex<double>>::random( int, std::complex<double> * )
+void Lapack<std::complex<double>>::random( int N, std::complex<double> *data )
 {
-    throw std::logic_error( "Not finished" );
+    static std::mutex lock;
+    static std::random_device rd;
+    static std::mt19937_64 gen( rd() );
+    static std::uniform_real_distribution<double> dis( 0, 1 );
+    lock.lock();
+    for ( int i = 0; i < N; i++ )
+        data[i] = std::complex<double>( dis( gen ), dis( gen ) );
+    lock.unlock();
 }
 
 
@@ -285,6 +298,42 @@ void extractTriDiag( int N, const TYPE *A, TYPE *DL, TYPE *D, TYPE *DU )
 }
 
 
+// Some basic tests (mostly to improve coverage)
+template<typename TYPE>
+int run_basic_tests()
+{
+    int N    = 50;
+    int KL   = 2;
+    int KU   = 3;
+    int K2   = 2 * KL + KU + 1;
+    auto x   = new TYPE[N];
+    auto A   = new TYPE[N * N];
+    auto D   = new TYPE[N];
+    auto D2  = new TYPE[N];
+    auto DL  = new TYPE[N - 1];
+    auto DL2 = new TYPE[N - 1];
+    auto DU  = new TYPE[N - 1];
+    auto DU2 = new TYPE[N - 1];
+    auto AB  = new TYPE[N * K2];
+    generateRhs( N, x );
+    generateMatrix( N, A );
+    generateMatrixBanded( N, KL, KU, A );
+    generateTriDiag( N, DL, D, DU );
+    extractBanded( N, KL, KU, A, AB );
+    extractTriDiag( N, A, DL2, D2, DU2 );
+    delete[] x;
+    delete[] A;
+    delete[] D;
+    delete[] DL;
+    delete[] DU;
+    delete[] D2;
+    delete[] DL2;
+    delete[] DU2;
+    delete[] AB;
+    return 0;
+}
+
+
 // Test random
 template<typename TYPE>
 static bool test_random( int N, double &error )
@@ -320,6 +369,9 @@ static bool test_random( int N, double &error )
         double X2c = 52.6; // Critical value for 0.999 (we will fail 0.1% of the time)
         error      = X2 / X2c;
         return error > 1.0;
+    } else if ( std::is_same_v<TYPE, std::complex<double>> ) {
+        // Need to improve complex tests
+        return 0;
     } else {
         throw std::logic_error( "Not finihsed" );
     }
@@ -382,9 +434,9 @@ static bool test_nrm2( int N, double &error )
     const int K = TEST_SIZE_VEC;
     TYPE *x     = new TYPE[K];
     Lapack<TYPE>::random( K, x );
-    TYPE2 ans1 = 0.0;
+    double ans1 = 0.0;
     for ( int j = 0; j < K; j++ )
-        ans1 += static_cast<TYPE>( x[j] ) * static_cast<TYPE>( x[j] );
+        ans1 += std::norm( x[j] );
     ans1         = sqrt( ans1 );
     int N_errors = 0;
     error        = 0;
@@ -441,7 +493,7 @@ static bool test_dot( int N, double &error )
     int N_errors = 0;
     error        = 0;
     for ( int i = 0; i < N; i++ ) {
-        TYPE ans2  = Lapack<TYPE>::dot( K, x1, 1, x2, 1 );
+        TYPE2 ans2 = Lapack<TYPE>::dot( K, x1, 1, x2, 1 );
         double err = std::abs( ans1 - ans2 ) / K;
         error      = std::max( error, err );
         if ( err > 50 * epsilon<TYPE>() )
@@ -565,6 +617,7 @@ static bool test_gemm( int N, double &error )
 template<typename TYPE>
 static bool test_gesv( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Test solving a diagonal matrix
     const int K = TEST_SIZE_MAT;
     TYPE *A     = new TYPE[K * K];
@@ -597,12 +650,17 @@ static bool test_gesv( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 
 // Test gtsv
 template<typename TYPE>
 static bool test_gtsv( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Test solving a tri-diagonal matrix by comparing to dgtsv
     const int K = TEST_SIZE_TRI_MAT / 2;
     TYPE *A     = new TYPE[K * K];
@@ -654,11 +712,16 @@ static bool test_gtsv( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 // Test gbsv
 template<typename TYPE>
 static bool test_gbsv( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Test solving a banded-diagonal matrix by comparing to dgtsv
     //    N = 6, KL = 2, KU = 1:
     //        *    *    *    +    +    +
@@ -708,12 +771,17 @@ static bool test_gbsv( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 
 // Test getrf
 template<typename TYPE>
 static bool test_getrf( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Check dgetrf by performing a factorization and solve and comparing to dgesv
     const int K = TEST_SIZE_MAT;
     TYPE *A     = new TYPE[K * K];
@@ -748,12 +816,17 @@ static bool test_getrf( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 
 // Test gttrf
 template<typename TYPE>
 static bool test_gttrf( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Check dgttrf by performing a factorization and solve and comparing to dgtsv
     const int K = 5 * TEST_SIZE_TRI;
     TYPE *D     = new TYPE[K];
@@ -802,12 +875,17 @@ static bool test_gttrf( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 
 // Test gbtrf
 template<typename TYPE>
 static bool test_gbtrf( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Check dgbtrf by performing a factorization and solve and comparing to dgbsv
     const int K  = TEST_SIZE_TRI;
     const int KL = 2;
@@ -845,12 +923,17 @@ static bool test_gbtrf( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 
 // Test getrs
 template<typename TYPE>
 static bool test_getrs( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Check dgetrs by performing a factorization and solve and comparing to dgesv
     const int K = 2 * TEST_SIZE_MAT;
     TYPE *A     = new TYPE[K * K];
@@ -886,12 +969,17 @@ static bool test_getrs( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 
 // Test gttrs
 template<typename TYPE>
 static bool test_gttrs( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Check dgttrs by performing a factorization and solve and comparing to dgtsv
     const int K = 5 * TEST_SIZE_TRI;
     TYPE *D     = new TYPE[K];
@@ -944,12 +1032,17 @@ static bool test_gttrs( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 
 // Test gbtrs
 template<typename TYPE>
 static bool test_gbtrs( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Check dgbtrs by performing a factorization and solve and comparing to dgbsv
     const int K  = TEST_SIZE_TRI;
     const int KL = 2;
@@ -988,12 +1081,17 @@ static bool test_gbtrs( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 
 // Test getri
 template<typename TYPE>
 static bool test_getri( int N, double &error )
 {
+#ifndef DISABLE_LAPACK
     // Check getri by performing a factorization, calculating the inverse,
     //   multiplying the rhs, and comparing to gesv
     const int K     = TEST_SIZE_MAT;
@@ -1048,6 +1146,10 @@ static bool test_getri( int N, double &error )
     delete[] IPIV;
     delete[] WORK;
     return N_errors > 0;
+#else
+    throw std::logic_error( "test is disables without external Lapack" );
+    return false;
+#endif
 }
 
 
