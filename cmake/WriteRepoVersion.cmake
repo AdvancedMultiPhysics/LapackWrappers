@@ -15,6 +15,15 @@ FUNCTION( WRITE_REPO_VERSION )
     ENDIF()
     SET( src_dir "${${PROJ}_SOURCE_DIR}" )
 
+    # Set the output filename
+    SET( filename "${${PROJ}_INSTALL_DIR}/include/${${PROJ}_INC}/${PROJ}_Version.h" )
+    set(extra_args ${ARGN})
+    LIST( LENGTH extra_args extra_count )
+    if ( ${extra_count} GREATER 0 )
+        LIST( GET extra_args 0 optional_arg )
+        SET( filename "${optional_arg}" )
+    endif ()
+
     # Get version info
     GET_VERSION_INFO()
     SET( ${PROJ}_MAJOR_VERSION  ${${PROJ}_MAJOR_VERSION}  PARENT_SCOPE )
@@ -23,8 +32,7 @@ FUNCTION( WRITE_REPO_VERSION )
     SET( ${PROJ}_SHORT_HASH     ${${PROJ}_SHORT_HASH}     PARENT_SCOPE )
     SET( ${PROJ}_LONG_HASH      ${${PROJ}_LONG_HASH}      PARENT_SCOPE )
     SET( ${PROJ}_BRANCH         ${${PROJ}_BRANCH}         PARENT_SCOPE )
-    SET( ${PROJ}_VERSION        ${${PROJ}_VERSION}       PARENT_SCOPE )
-MESSAGE("SET( ${PROJ}_VERSION        ${${PROJ}_VERSION}       PARENT_SCOPE )")
+    SET( ${PROJ}_VERSION        ${${PROJ}_VERSION}        PARENT_SCOPE )
 
     # Save the version info
     SAVE_VERSION_INFO( )
@@ -34,10 +42,13 @@ MESSAGE("SET( ${PROJ}_VERSION        ${${PROJ}_VERSION}       PARENT_SCOPE )")
     MESSAGE("${PROJ} Version = ${${PROJ}_MAJOR_VERSION}.${${PROJ}_MINOR_VERSION}.${${PROJ}_BUILD_VERSION}")
 
     # Write the version info to the file
-    SET( filename "${${PROJ}_INSTALL_DIR}/include/${${PROJ}_INC}/${PROJ}_Version.h" )
+
     SET( tmp_file "${CMAKE_CURRENT_BINARY_DIR}/tmp/version.h" )
     STRING(REGEX REPLACE " " "_" namespace "${${PROJ}_NAMESPACE}")
     FILE(WRITE  "${tmp_file}" "#ifndef ${PROJ}_VERSION_INCLUDE\n#define ${PROJ}_VERSION_INCLUDE\n\n" )
+    FILE(APPEND "${tmp_file}" "#define ${namespace}_MAJOR_VERSION ${${PROJ}_MAJOR_VERSION}\n" )
+    FILE(APPEND "${tmp_file}" "#define ${namespace}_MINOR_VERSION ${${PROJ}_MINOR_VERSION}\n" )
+    FILE(APPEND "${tmp_file}" "#define ${namespace}_BUILD_VERSION ${${PROJ}_BUILD_VERSION}\n\n" )
     FILE(APPEND "${tmp_file}" "namespace ${namespace}::Version{\n\n" )
     FILE(APPEND "${tmp_file}" "static const int major = ${${PROJ}_MAJOR_VERSION};\n" )
     FILE(APPEND "${tmp_file}" "static const int minor = ${${PROJ}_MINOR_VERSION};\n" )
