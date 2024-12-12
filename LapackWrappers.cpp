@@ -80,10 +80,6 @@ class extended<std::complex<double>>
 public:
     typedef std::complex<long double> TYPE2;
 };
-static std::complex<double> operator-( std::complex<long double> x, std::complex<double> y )
-{
-    return std::complex<double>( x.real() + y.real(), x.imag() + y.imag() );
-}
 
 
 // Get epsilon
@@ -430,7 +426,6 @@ static bool test_scal( int N, double &error )
 template<typename TYPE>
 static bool test_nrm2( int N, double &error )
 {
-    typedef typename extended<TYPE>::TYPE2 TYPE2;
     const int K = TEST_SIZE_VEC;
     TYPE *x     = new TYPE[K];
     Lapack<TYPE>::random( K, x );
