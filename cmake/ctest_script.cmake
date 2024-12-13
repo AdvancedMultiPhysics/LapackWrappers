@@ -1,6 +1,6 @@
 # ctest script for building, running, and submitting the test results 
 # Usage:  ctest -S script,build
-#   build = debug / optimized / weekly / valgrind
+#   build = debug / optimized / valgrind / continuous
 # Note: this test will use use the number of processors defined in the variable N_PROCS,
 #   the environmental variable N_PROCS, or the number of processors available (if not specified)
 
@@ -11,7 +11,7 @@ SET( PROJ LapackWrappers )
 
 # Set platform specific variables
 SITE_NAME( HOSTNAME )
-STRING( REGEX REPLACE  "-(ext|login)(..|.)"  ""  HOSTNAME  "${HOSTNAME}" )
+STRING( REGEX REPLACE "-(ext|login)(..|.)" "" HOSTNAME "${HOSTNAME}" )
 SET( USE_MPI             $ENV{USE_MPI}             )
 SET( CC                  $ENV{CC}                  )
 SET( CXX                 $ENV{CXX}                 )
@@ -50,41 +50,38 @@ IF ( NOT CMAKE_MAKE_PROGRAM )
 ENDIF()
 
 
+# Set default options
+SET( CTEST_BUILD_NAME "${PROJ}" )
+SET( CMAKE_BUILD_TYPE "Release" )
+SET( CTEST_COVERAGE_COMMAND )
+SET( ENABLE_GCOV "false" )
+SET( USE_VALGRIND FALSE )
+SET( USE_VALGRIND_MATLAB FALSE )
+SET( CTEST_DASHBOARD "Nightly" )
+
+
 # Check that we specified the build type to run
 SET( RUN_WEEKLY FALSE )
 IF( NOT CTEST_SCRIPT_ARG )
-    MESSAGE(FATAL_ERROR "No build specified: ctest -S /path/to/script,build (debug/optimized/valgrind")
+    MESSAGE(FATAL_ERROR "No build specified: ctest -S /path/to/script,build (debug/optimized/valgrind/continuous")
+ELSEIF( ${CTEST_SCRIPT_ARG} STREQUAL "continuous" )
+    SET( CTEST_DASHBOARD "Continuous" )
 ELSEIF( ${CTEST_SCRIPT_ARG} STREQUAL "debug" )
     SET( CTEST_BUILD_NAME "${PROJ}-debug" )
     SET( CMAKE_BUILD_TYPE "Debug" )
     SET( CTEST_COVERAGE_COMMAND ${COVERAGE_COMMAND} )
     SET( ENABLE_GCOV "true" )
-    SET( USE_VALGRIND FALSE )
 ELSEIF( (${CTEST_SCRIPT_ARG} STREQUAL "optimized") OR (${CTEST_SCRIPT_ARG} STREQUAL "opt") )
     SET( CTEST_BUILD_NAME "${PROJ}-opt" )
-    SET( CMAKE_BUILD_TYPE "Release" )
-    SET( CTEST_COVERAGE_COMMAND )
-    SET( ENABLE_GCOV "false" )
-    SET( USE_VALGRIND FALSE )
-ELSEIF( (${CTEST_SCRIPT_ARG} STREQUAL "weekly") )
-    SET( CTEST_BUILD_NAME "${PROJ}-Weekly" )
-    SET( CMAKE_BUILD_TYPE "Release" )
-    SET( CTEST_COVERAGE_COMMAND )
-    SET( ENABLE_GCOV "false" )
-    SET( USE_VALGRIND FALSE )
-    SET( RUN_WEEKLY TRUE )
 ELSEIF( ${CTEST_SCRIPT_ARG} STREQUAL "valgrind" )
     SET( CTEST_BUILD_NAME "${PROJ}-valgrind" )
     SET( CMAKE_BUILD_TYPE "Debug" )
-    SET( CTEST_COVERAGE_COMMAND )
-    SET( ENABLE_GCOV "false" )
     SET( USE_VALGRIND TRUE )
 ELSEIF( ${CTEST_SCRIPT_ARG} STREQUAL "doc" )
     SET( CTEST_BUILD_NAME "${PROJ}-doc" )
-    SET( CMAKE_BUILD_TYPE "Release" )
     SET( BUILD_ONLY_DOCS "true" )
 ELSE()
-    MESSAGE(FATAL_ERROR "Invalid build (${CTEST_SCRIPT_ARG}): ctest -S /path/to/script,build (debug/opt/valgrind")
+    MESSAGE(FATAL_ERROR "Invalid build (${CTEST_SCRIPT_ARG}): ctest -S /path/to/script,build (debug/opt/valgrind/continuous")
 ENDIF()
 IF ( BUILDNAME_POSTFIX )
     SET( CTEST_BUILD_NAME "${CTEST_BUILD_NAME}-${BUILDNAME_POSTFIX}" )
@@ -95,7 +92,9 @@ ENDIF()
 
 
 # Set the number of processors
-SET( N_PROCS $ENV{N_PROCS} )
+IF( NOT DEFINED N_PROCS )
+    SET( N_PROCS $ENV{N_PROCS} )
+ENDIF()
 IF ( NOT DEFINED N_PROCS )
     SET( N_PROCS 1 ) # Default number of processor if all else fails
     IF ( EXISTS "/proc/cpuinfo" )
@@ -130,7 +129,6 @@ SET( CTEST_NIGHTLY_START_TIME ${NIGHTLY_START_TIME} )
 SET( CTEST_PROJECT_NAME "${PROJ}" )
 SET( CTEST_SOURCE_DIRECTORY "${${PROJ}_SOURCE_DIR}" )
 SET( CTEST_BINARY_DIRECTORY "." )
-SET( CTEST_DASHBOARD "Nightly" )
 SET( CTEST_CUSTOM_MAXIMUM_NUMBER_OF_ERRORS 500 )
 SET( CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 500 )
 SET( CTEST_CUSTOM_MAXIMUM_PASSED_TEST_OUTPUT_SIZE 10000 )
@@ -145,7 +143,7 @@ SET( CTEST_CUSTOM_WARNING_EXCEPTION )
 SET( CTEST_CUSTOM_ERROR_EXCEPTION )
 
 
-# Set timeouts: 5 minutes for debug, 2 for opt, and 30 minutes for valgrind/weekly
+# Set timeouts: 5 minutes for debug, 2 for opt, and 30 minutes for valgrind
 IF ( USE_VALGRIND )
     SET( CTEST_TEST_TIMEOUT 1800 )
 ELSEIF( ${CMAKE_BUILD_TYPE} STREQUAL "Debug" )
@@ -211,39 +209,45 @@ ELSE()
 ENDIF()
 
 
+# Configure update
+IF ( NOT CTEST_GIT_COMMAND )
+    SET( CTEST_GIT_COMMAND "$ENV{CTEST_GIT_COMMAND}" )
+ENDIF()
+IF ( NOT CTEST_GIT_COMMAND )
+    FIND_PROGRAM( CTEST_GIT_COMMAND "git" )
+ENDIF()
+IF ( NOT CTEST_GIT_COMMAND )
+    SET( CTEST_GIT_COMMAND git )
+ENDIF()
+SET( CTEST_UPDATE_COMMAND ${CTEST_GIT_COMMAND} )
+SET( CTEST_UPDATE_OPTIONS "pull" )
+
+
 # Configure and run the tests
 CTEST_START( "${CTEST_DASHBOARD}" )
 CTEST_UPDATE()
-CTEST_SUBMIT( PARTS Update )
 CTEST_CONFIGURE(
     BUILD   ${CTEST_BINARY_DIRECTORY}
     SOURCE  ${CTEST_SOURCE_DIRECTORY}
     OPTIONS "${CTEST_OPTIONS}"
 )
-CTEST_SUBMIT( PARTS Configure )
-
-
-# Run the configure/build/test
 CTEST_BUILD()
-CTEST_SUBMIT( PARTS Build )
 EXECUTE_PROCESS( COMMAND ${CMAKE_MAKE_PROGRAM} install )
 IF ( SKIP_TESTS )
     # Do not run tests
     SET( CTEST_COVERAGE_COMMAND )
 ELSEIF ( USE_VALGRIND )
-    CTEST_MEMCHECK( EXCLUDE "(procs|WEEKLY|cppcheck|cppclean|test_crash)"  PARALLEL_LEVEL ${N_PROCS} )
-ELSEIF ( EXCLUDE_WEEKLY )
-    CTEST_TEST( EXCLUDE WEEKLY  PARALLEL_LEVEL ${N_PROCS} )
+    CTEST_MEMCHECK( EXCLUDE "(procs|cppcheck|cppclean|test_crash)"  PARALLEL_LEVEL ${N_PROCS} )
 ELSE()
     CTEST_TEST( PARALLEL_LEVEL ${N_PROCS} )
 ENDIF()
 IF( CTEST_COVERAGE_COMMAND )
     CTEST_COVERAGE()
 ENDIF()
-CTEST_SUBMIT( PARTS Test )
-CTEST_SUBMIT( PARTS Coverage )
-CTEST_SUBMIT( PARTS MemCheck )
-CTEST_SUBMIT( PARTS Done )
+
+
+# Submit the results to CDash
+CTEST_SUBMIT()
 
 
 # Write a message to test for success in the ctest-builder
