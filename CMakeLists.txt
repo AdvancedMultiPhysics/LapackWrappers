@@ -34,14 +34,6 @@ MESSAGE("Installing LapackWrappers in: ${CMAKE_INSTALL_PREFIX}")
 SET( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH} )
 
 
-# Set shared/static library
-IF ( ENABLE_SHARED )
-    SET( LIB_TYPE SHARED )
-ELSE()
-    SET( LIB_TYPE STATIC )
-ENDIF()
-
-
 # Find blas/lapack
 IF ( DISABLE_BLAS OR DISABLE_LAPACK )
     # Configuring without lapack/blas
@@ -71,6 +63,13 @@ ELSE()
     INCLUDE( cmake/WriteLapackHeader.cmake )
 ENDIF()
 INCLUDE_DIRECTORIES( "${CMAKE_INSTALL_PREFIX}/include" )
+
+
+# Set shared/static library
+IF ( NOT DEFINED LIB_TYPE )
+    CHECK_ENABLE_FLAG( ENABLE_SHARED 0 )
+    SET( LIB_TYPE ${ENABLE_SHARED} )
+ENDIF()
 
 
 # Set system specific libraries
