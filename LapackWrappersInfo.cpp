@@ -32,16 +32,6 @@
 #endif
 
 
-// Null use macro
-#define NULL_USE( variable )                 \
-    do {                                     \
-        if ( 0 ) {                           \
-            char *temp = (char *) &variable; \
-            temp++;                          \
-        }                                    \
-    } while ( 0 )
-
-
 // Function to replace all instances of a string with another
 static inline std::string strrep(
     const std::string &in, const std::string &s, const std::string &r )
@@ -66,13 +56,11 @@ static inline std::string runCommand( std::function<void( void )> fun, const std
     fflush( stdout ); // clean everything first
     char buffer[2048];
     memset( buffer, 0, sizeof( buffer ) );
-    auto out = dup( STDOUT_FILENO );
-    auto tmp = freopen( "NUL", "a", stdout );
-    NULL_USE( tmp );
+    auto out                  = dup( STDOUT_FILENO );
+    [[maybe_unused]] auto tmp = freopen( "NUL", "a", stdout );
     setvbuf( stdout, buffer, _IOFBF, 2048 );
     fun();
     tmp = freopen( "NUL", "a", stdout );
-    NULL_USE( tmp );
     dup2( out, STDOUT_FILENO );
     setvbuf( stdout, NULL, _IONBF, 2048 );
     std::string str = prefix + strrep( buffer, "\n", "\n  " );
@@ -112,10 +100,9 @@ static void setenv( const char *name, const char *value )
 /******************************************************************
  * Set the number of threads to use                                *
  ******************************************************************/
-static int setThreads( int N )
+static int setThreads( [[maybe_unused]] int N )
 {
     int N2 = 0;
-    NULL_USE( N );
 #if defined( USE_MKL )
     setenv( "MKL_NUM_THREADS", std::to_string( N ).c_str() );
     N2 = N;

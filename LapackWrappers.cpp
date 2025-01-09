@@ -36,21 +36,6 @@
 #define TEST_SIZE_TRI_MAT 1000 // Tridiagonal/banded solve tests
 
 
-/*! \def NULL_USE(variable)
- *  \brief    A null use of a variable
- *  \details  A null use of a variable, use to avoid GNU compiler warnings about
- * unused variables.
- *  \param variable  Variable to pretend to use
- */
-#define NULL_USE( variable )                 \
-    do {                                     \
-        if ( 0 ) {                           \
-            char *temp = (char *) &variable; \
-            temp++;                          \
-        }                                    \
-    } while ( 0 )
-
-
 // Choose precision to perfom calculations
 template<class TYPE>
 class extended
@@ -521,7 +506,6 @@ static bool test_axpy( int N, double &error )
         error      = std::max( error, err );
     }
     bool fail = error > 200 * epsilon<TYPE>();
-    NULL_USE( y1 );
     delete[] x;
     delete[] y0;
     delete[] y1;
@@ -608,11 +592,14 @@ static bool test_gemm( int N, double &error )
     return N_errors > 0;
 }
 
+
+#ifndef DISABLE_LAPACK
+
+
 // Test gesv
 template<typename TYPE>
 static bool test_gesv( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Test solving a diagonal matrix
     const int K = TEST_SIZE_MAT;
     TYPE *A     = new TYPE[K * K];
@@ -645,17 +632,12 @@ static bool test_gesv( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
 
 // Test gtsv
 template<typename TYPE>
 static bool test_gtsv( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Test solving a tri-diagonal matrix by comparing to dgtsv
     const int K = TEST_SIZE_TRI_MAT / 2;
     TYPE *A     = new TYPE[K * K];
@@ -707,16 +689,11 @@ static bool test_gtsv( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
 // Test gbsv
 template<typename TYPE>
 static bool test_gbsv( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Test solving a banded-diagonal matrix by comparing to dgtsv
     //    N = 6, KL = 2, KU = 1:
     //        *    *    *    +    +    +
@@ -766,17 +743,12 @@ static bool test_gbsv( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
 
 // Test getrf
 template<typename TYPE>
 static bool test_getrf( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Check dgetrf by performing a factorization and solve and comparing to dgesv
     const int K = TEST_SIZE_MAT;
     TYPE *A     = new TYPE[K * K];
@@ -811,17 +783,12 @@ static bool test_getrf( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
 
 // Test gttrf
 template<typename TYPE>
 static bool test_gttrf( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Check dgttrf by performing a factorization and solve and comparing to dgtsv
     const int K = 5 * TEST_SIZE_TRI;
     TYPE *D     = new TYPE[K];
@@ -870,17 +837,12 @@ static bool test_gttrf( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
 
 // Test gbtrf
 template<typename TYPE>
 static bool test_gbtrf( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Check dgbtrf by performing a factorization and solve and comparing to dgbsv
     const int K  = TEST_SIZE_TRI;
     const int KL = 2;
@@ -918,17 +880,12 @@ static bool test_gbtrf( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
 
 // Test getrs
 template<typename TYPE>
 static bool test_getrs( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Check dgetrs by performing a factorization and solve and comparing to dgesv
     const int K = 2 * TEST_SIZE_MAT;
     TYPE *A     = new TYPE[K * K];
@@ -964,17 +921,12 @@ static bool test_getrs( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
 
 // Test gttrs
 template<typename TYPE>
 static bool test_gttrs( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Check dgttrs by performing a factorization and solve and comparing to dgtsv
     const int K = 5 * TEST_SIZE_TRI;
     TYPE *D     = new TYPE[K];
@@ -1027,17 +979,12 @@ static bool test_gttrs( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
 
 // Test gbtrs
 template<typename TYPE>
 static bool test_gbtrs( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Check dgbtrs by performing a factorization and solve and comparing to dgbsv
     const int K  = TEST_SIZE_TRI;
     const int KL = 2;
@@ -1076,17 +1023,12 @@ static bool test_gbtrs( int N, double &error )
     delete[] b;
     delete[] IPIV;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
 
 // Test getri
 template<typename TYPE>
 static bool test_getri( int N, double &error )
 {
-#ifndef DISABLE_LAPACK
     // Check getri by performing a factorization, calculating the inverse,
     //   multiplying the rhs, and comparing to gesv
     const int K     = TEST_SIZE_MAT;
@@ -1141,11 +1083,76 @@ static bool test_getri( int N, double &error )
     delete[] IPIV;
     delete[] WORK;
     return N_errors > 0;
-#else
-    throw std::logic_error( "test is disables without external Lapack" );
-    return false;
-#endif
 }
+
+
+#else
+
+
+// Tests that are not valid without lapack
+template<typename TYPE>
+static bool test_gesv( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+template<typename TYPE>
+static bool test_gtsv( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+template<typename TYPE>
+static bool test_gbsv( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+template<typename TYPE>
+static bool test_getrf( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+template<typename TYPE>
+static bool test_gttrf( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+template<typename TYPE>
+static bool test_gbtrf( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+template<typename TYPE>
+static bool test_getrs( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+template<typename TYPE>
+static bool test_gttrs( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+template<typename TYPE>
+static bool test_gbtrs( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+template<typename TYPE>
+static bool test_getri( int, double & )
+{
+    throw std::logic_error( "test is disabled without external Lapack" );
+    return false;
+}
+
+
+#endif
 
 
 /******************************************************************

@@ -48,6 +48,7 @@ IF ( DISABLE_BLAS OR DISABLE_LAPACK )
     ENABLE_LANGUAGE( CXX )
     INCLUDE( cmake/macros.cmake )
     INCLUDE( cmake/WriteRepoVersion.cmake )
+    SET_COMPILER_FLAGS()
 ELSEIF ( TPL_DIRECTORY )
     # Use the TPL package to specify blas/lapack
     FIND_PACKAGE( TPLs REQUIRED OPTIONAL_COMPONENTS LAPACK PATHS "${TPL_DIRECTORY}" )

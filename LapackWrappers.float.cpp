@@ -299,7 +299,7 @@ void Lapack<float>::gesv(
         IPIV[i] = static_cast<int>( IPIVp[i] );
     }
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::sgesv )( &N, &NRHS, (float *) A, &LDA, IPIV, B, &LDB, &INFO );
 #endif
@@ -318,7 +318,7 @@ void Lapack<float>::gtsv(
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t N2 = N, NRHS2 = NRHS, LDB2 = LDB, INFOp;
     FORTRAN_WRAPPER( ::sgtsv )( &N2, &NRHS2, DL, D, DU, B, &LDB2, &INFOp );
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::sgtsv )( &N, &NRHS, DL, D, DU, B, &LDB, &INFO );
 #endif
@@ -342,7 +342,7 @@ void Lapack<float>::gbsv(
         IPIV[i] = static_cast<int>( IPIVp[i] );
     }
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::sgbsv )( &N, &KL, &KU, &NRHS, AB, &LDAB, IPIV, B, &LDB, &INFO );
 #endif
@@ -365,7 +365,7 @@ void Lapack<float>::getrf( int M, int N, float *A, int LDA, int *IPIV, int &INFO
         IPIV[i] = static_cast<int>( IPIVp[i] );
     }
     delete[] IPIVp;
-    INFO             = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::sgetrf )( &M, &N, A, &LDA, IPIV, &INFO );
 #endif
@@ -388,7 +388,7 @@ void Lapack<float>::gttrf( int N, float *DL, float *D, float *DU, float *DU2, in
         IPIV[i] = static_cast<int>( IPIVp[i] );
     }
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::sgttrf )( &N, DL, D, DU, DU2, IPIV, &INFO );
 #endif
@@ -480,7 +480,7 @@ void Lapack<float>::gttrs( char TRANS, int N, int NRHS, const float *DL, const f
     ( &TRANS, &Np, &NRHSp, (float *) DL, (float *) D, (float *) DU, (float *) DU2, IPIVp, B, &LDBp,
         &INFOp );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::sgttrs )
     ( &TRANS, &N, &NRHS, (float *) DL, (float *) D, (float *) DU, (float *) DU2, (int *) IPIV, B,

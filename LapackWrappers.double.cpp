@@ -301,7 +301,7 @@ void Lapack<double>::gesv(
     for ( int i = 0; i < N; i++ )
         IPIV[i] = static_cast<int>( IPIVp[i] );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::dgesv )( &N, &NRHS, (double *) A, &LDA, IPIV, B, &LDB, &INFO );
 #endif
@@ -349,7 +349,7 @@ void Lapack<double>::gbsv( int N, int KL, int KU, int NRHS, double *AB, int LDAB
     for ( int i = 0; i < N; i++ )
         IPIV[i] = static_cast<int>( IPIVp[i] );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::dgbsv )( &N, &KL, &KU, &NRHS, AB, &LDAB, IPIV, B, &LDB, &INFO );
 #endif
@@ -398,7 +398,7 @@ void Lapack<double>::gttrf(
     for ( int i = 0; i < N; i++ )
         IPIV[i] = static_cast<int>( IPIVp[i] );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::dgttrf )( &N, DL, D, DU, DU2, IPIV, &INFO );
 #endif
@@ -453,7 +453,7 @@ void Lapack<double>::getrs( char TRANS, int N, int NRHS, const double *A, int LD
     FORTRAN_WRAPPER( ::dgetrs )
     ( &TRANS, &Np, &NRHSp, (double *) A, &LDAp, IPIVp, B, &LDBp, &INFOp );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::dgetrs )
     ( &TRANS, &N, &NRHS, (double *) A, &LDA, (int *) IPIV, B, &LDB, &INFO );
@@ -486,7 +486,7 @@ void Lapack<double>::gttrs( char TRANS, int N, int NRHS, const double *DL, const
     ( &TRANS, &Np, &NRHSp, (double *) DL, (double *) D, (double *) DU, (double *) DU2, IPIVp, B,
         &LDBp, &INFOp );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::dgttrs )
     ( &TRANS, &N, &NRHS, (double *) DL, (double *) D, (double *) DU, (double *) DU2, (int *) IPIV,

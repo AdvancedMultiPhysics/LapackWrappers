@@ -379,7 +379,7 @@ void Lapack<std::complex<double>>::gesv( int N, int NRHS, std::complex<double> *
     ( &Np, &NRHSp, (double *) A, &LDAp, IPIVp, (double *) B, &LDBp, &INFOp );
     convert( N, IPIVp, IPIV );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::zgesv )
     ( &N, &NRHS, const_cast<Complex *>( A ), &LDA, IPIV, const_cast<Complex *>( B ), &LDB, &INFO );
@@ -405,7 +405,7 @@ void Lapack<std::complex<double>>::gtsv( int N, int NRHS, std::complex<double> *
     ptrdiff_t N2 = N, NRHS2 = NRHS, LDB2 = LDB, INFOp;
     FORTRAN_WRAPPER( ::zgtsv )
     ( &N2, &NRHS2, (double *) DL, (double *) D, (double *) DU, (double *) B, &LDB2, &INFOp );
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::zgtsv )
     ( &N, &NRHS, DL, D, DU, const_cast<Complex *>( B ), &LDB, &INFO );
@@ -431,7 +431,7 @@ void Lapack<std::complex<double>>::gbsv( int N, int KL, int KU, int NRHS, std::c
     ( &Np, &KLp, &KUp, &NRHSp, (double *) AB, &LDABp, IPIVp, (double *) B, &LDBp, &INFOp );
     convert( N, IPIVp, IPIV );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::zgbsv )
     ( &N, &KL, &KU, &NRHS, const_cast<Complex *>( AB ), &LDAB, IPIV, const_cast<Complex *>( B ),
@@ -456,7 +456,7 @@ void Lapack<std::complex<double>>::getrf(
     FORTRAN_WRAPPER( ::zgetrf )( &Mp, &Np, (double *) A, &LDAp, IPIVp, &INFOp );
     convert( N, IPIVp, IPIV );
     delete[] IPIVp;
-    INFO             = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::zgetrf )( &M, &N, A, &LDA, IPIV, &INFO );
 #endif
@@ -484,7 +484,7 @@ void Lapack<std::complex<double>>::gttrf( int N, std::complex<double> *DL_,
     ( &Np, (double *) DL, (double *) D, (double *) DU, (double *) DU2, IPIVp, &INFOp );
     convert( N, IPIVp, IPIV );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::zgttrf )( &N, DL, D, DU, DU2, IPIV, &INFO );
 #endif
@@ -541,7 +541,7 @@ void Lapack<std::complex<double>>::getrs( char TRANS, int N, int NRHS,
     FORTRAN_WRAPPER( ::zgetrs )
     ( &TRANS, &Np, &NRHSp, (double *) A, &LDAp, IPIVp, (double *) B, &LDBp, &INFOp );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::zgetrs )
     ( &TRANS, &N, &NRHS, const_cast<Complex *>( A ), &LDA, (int *) IPIV, B, &LDB, &INFO );
@@ -577,7 +577,7 @@ void Lapack<std::complex<double>>::gttrs( char TRANS, int N, int NRHS,
     ( &TRANS, &Np, &NRHSp, (double *) DL, (double *) D, (double *) DU, (double *) DU2, IPIVp,
         (double *) B, &LDBp, &INFOp );
     delete[] IPIVp;
-    INFO         = static_cast<int>( INFOp );
+    INFO = static_cast<int>( INFOp );
 #else
     FORTRAN_WRAPPER( ::zgttrs )
     ( &TRANS, &N, &NRHS, const_cast<Complex *>( DL ), const_cast<Complex *>( D ),

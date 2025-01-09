@@ -14,6 +14,43 @@ MACRO( CHECK_ENABLE_FLAG FLAG DEFAULT )
 ENDMACRO()
 
 
+# Set compiler flags
+MACRO( SET_COMPILER_FLAGS )
+    IF ( CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU") )
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Woverloaded-virtual -Wsign-compare -Wformat-security -Wformat-overflow=2 -Wno-aggressive-loop-optimizations")
+    ELSEIF ( MSVC OR MSVC_IDE OR MSVC60 OR MSVC70 OR MSVC71 OR MSVC80 OR CMAKE_COMPILER_2005 OR MSVC90 OR MSVC10 )
+        IF ( NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
+            MESSAGE( FATAL_ERROR "Using microsoft compilers on non-windows system?" )
+        ENDIF()
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D _SCL_SECURE_NO_WARNINGS /D _CRT_SECURE_NO_WARNINGS /D _ITERATOR_DEBUG_LEVEL=0 /wd4267" )
+    ELSEIF ( ${CMAKE_CXX_COMPILER_ID} MATCHES "Intel" ) 
+        SET(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -Wall" )
+    ELSEIF ( ${CMAKE_CXX_COMPILER_ID} MATCHES "PGI" )
+        SET(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -Minform=inform -Mlist --display_error_number --diag_suppress 111,128,185")
+    ELSEIF ( (${CMAKE_CXX_COMPILER_ID} MATCHES "CRAY") OR (${CMAKE_CXX_COMPILER_ID} MATCHES "Cray") )
+        SET(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS}")
+    ELSEIF ( (${CMAKE_CXX_COMPILER_ID} MATCHES "CLANG") OR (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang") )
+        SET(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wno-missing-braces -Wmissing-field-initializers -ftemplate-depth=1024")
+    ELSEIF ( ${CMAKE_CXX_COMPILER_ID} MATCHES "XL" )
+        SET(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -Wall -ftemplate-depth=512")
+    ELSE()
+        MESSAGE( "CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
+        MESSAGE( "CMAKE_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}")
+        MESSAGE(FATAL_ERROR "Unknown C/C++ compiler")
+    ENDIF()
+    IF ( ${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND NOT ("${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-D_DEBUG") )
+        SET( CMAKE_C_FLAGS_DEBUG   " ${CMAKE_C_FLAGS_DEBUG}   -DDEBUG -D_DEBUG" )
+        SET( CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG" )        
+    ENDIF()
+    # Enable GLIBCXX_DEBUG flags
+    CHECK_ENABLE_FLAG( ENABLE_GXX_DEBUG 0 )
+    IF ( ENABLE_GXX_DEBUG AND NOT ("${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-D_GLIBCXX_DEBUG") ) 
+        SET( CMAKE_CXX_FLAGS_DEBUG " ${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC" )
+    ENDIF()
+    MESSAGE( "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+ENDMACRO()
+
+
 # add custom target distclean
 # cleans and removes cmake generated files etc.
 FUNCTION( ADD_DISTCLEAN ${ARGN} )
