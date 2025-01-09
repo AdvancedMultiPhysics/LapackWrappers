@@ -32,22 +32,17 @@ SET( ${PROJ}_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} )
 SET( ${PROJ}_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 MESSAGE("Installing LapackWrappers in: ${CMAKE_INSTALL_PREFIX}")
 SET( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH} )
+INCLUDE_DIRECTORIES( "${CMAKE_INSTALL_PREFIX}/include" )
 
 
 # Find blas/lapack
-IF ( DISABLE_BLAS OR DISABLE_LAPACK )
-    # Configuring without lapack/blas
-    ENABLE_LANGUAGE( CXX )
-    INCLUDE( cmake/macros.cmake )
-    INCLUDE( cmake/WriteRepoVersion.cmake )
-    SET_COMPILER_FLAGS()
-ELSEIF ( TPL_DIRECTORY )
+IF ( TPL_DIRECTORY )
     # Use the TPL package to specify blas/lapack
     FIND_PACKAGE( TPLs REQUIRED OPTIONAL_COMPONENTS LAPACK PATHS "${TPL_DIRECTORY}" )
     IF ( NOT DEFINED LAPACK_FOUND )
         SET( DISABLE_BLAS TRUE )
         SET( DISABLE_LAPACK TRUE )
-    ELSEIF ( LAPACK_FOUND )
+    ELSEIF ( LAPACK_FOUND AND NOT ( DISABLE_BLAS OR DISABLE_LAPACK ) )
         SET( CMAKE_INSTALL_RPATH "${BLAS_DIR}" "${LAPACK_DIR}" ${CMAKE_INSTALL_RPATH} )
         INCLUDE( cmake/WriteLapackHeader.cmake )
     ELSE()
@@ -55,20 +50,24 @@ ELSEIF ( TPL_DIRECTORY )
         SET( DISABLE_LAPACK TRUE )
     ENDIF()
 ELSE()
-    # Find Blas/Lapack
+    # Standalone configure
     ENABLE_LANGUAGE( CXX )
-    FIND_PACKAGE( BlasLapack )
     INCLUDE( cmake/macros.cmake )
     INCLUDE( cmake/WriteRepoVersion.cmake )
-    INCLUDE( cmake/WriteLapackHeader.cmake )
+    SET_COMPILER_FLAGS()
+    IF ( NOT ( DISABLE_BLAS OR DISABLE_LAPACK ) )
+        FIND_PACKAGE( BlasLapack )
+    ENDIF()
 ENDIF()
-INCLUDE_DIRECTORIES( "${CMAKE_INSTALL_PREFIX}/include" )
 
 
 # Set shared/static library
 IF ( NOT DEFINED LIB_TYPE )
-    CHECK_ENABLE_FLAG( ENABLE_SHARED 0 )
-    SET( LIB_TYPE ${ENABLE_SHARED} )
+    IF ( ENABLE_SHARED )
+        SET( LIB_TYPE SHARED )
+    ELSE()
+        SET( LIB_TYPE STATIC )
+    ENDIF()
 ENDIF()
 
 
