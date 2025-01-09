@@ -51,7 +51,8 @@ static inline std::string strrep(
 
 
 // Function to run a command and capture stdout
-static inline std::string runCommand( std::function<void( void )> fun, const std::string &prefix )
+[[maybe_unused]] static inline std::string runCommand(
+    std::function<void( void )> fun, const std::string &prefix )
 {
     fflush( stdout ); // clean everything first
     char buffer[2048];
