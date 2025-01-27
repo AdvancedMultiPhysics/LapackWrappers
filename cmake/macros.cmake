@@ -1,3 +1,13 @@
+# Append a list to a file
+FUNCTION( APPEND_LIST FILENAME VARS PREFIX POSTFIX )
+    FOREACH ( tmp ${VARS} )
+        FILE( APPEND "${FILENAME}" "${PREFIX}" )
+        FILE( APPEND "${FILENAME}" "${tmp}" )
+        FILE( APPEND "${FILENAME}" "${POSTFIX}" )
+    ENDFOREACH ()
+ENDFUNCTION()
+
+
 # Check if a flag is enabled
 MACRO( CHECK_ENABLE_FLAG FLAG DEFAULT )
     IF ( NOT DEFINED ${FLAG} )
@@ -19,10 +29,9 @@ MACRO( SET_COMPILER_FLAGS )
     IF ( CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU") )
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Woverloaded-virtual -Wsign-compare -Wformat-security -Wformat-overflow=2 -Wno-aggressive-loop-optimizations")
     ELSEIF ( MSVC OR MSVC_IDE OR MSVC60 OR MSVC70 OR MSVC71 OR MSVC80 OR CMAKE_COMPILER_2005 OR MSVC90 OR MSVC10 )
-        IF ( NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
-            MESSAGE( FATAL_ERROR "Using microsoft compilers on non-windows system?" )
-        ENDIF()
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D _SCL_SECURE_NO_WARNINGS /D _CRT_SECURE_NO_WARNINGS /D _ITERATOR_DEBUG_LEVEL=0 /wd4267" )
+        # Add Microsoft specifc compiler options
+        SET( CMAKE_C_FLAGS     "${CMAKE_C_FLAGS} /D _SCL_SECURE_NO_WARNINGS /D _CRT_SECURE_NO_WARNINGS /D _ITERATOR_DEBUG_LEVEL=0 /wd4267 /Zc:preprocessor" )
+        SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D _SCL_SECURE_NO_WARNINGS /D _CRT_SECURE_NO_WARNINGS /D _ITERATOR_DEBUG_LEVEL=0 /wd4267 /Zc:preprocessor" )
     ELSEIF ( ${CMAKE_CXX_COMPILER_ID} MATCHES "Intel" ) 
         SET(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -Wall" )
     ELSEIF ( ${CMAKE_CXX_COMPILER_ID} MATCHES "PGI" )
@@ -105,7 +114,13 @@ FUNCTION( ADD_DISTCLEAN ${ARGN} )
             TARGET  distclean
         )
     ELSE()
-        SET( DISTCLEANED ${DISTCLEANED} *.vcxproj* ipch x64 Debug )
+        SET( DISTCLEANED
+            ${DISTCLEANED}
+            *.vcxproj*
+            ipch
+            x64
+            Debug
+        )
         SET( DISTCLEAN_FILE "${CMAKE_CURRENT_BINARY_DIR}/distclean.bat" )
         FILE( WRITE  "${DISTCLEAN_FILE}" "del /s /q /f " )
         APPEND_LIST( "${DISTCLEAN_FILE}" "${DISTCLEANED}" " " " " )
