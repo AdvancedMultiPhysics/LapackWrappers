@@ -22,12 +22,8 @@
 // Choose the OS
 #if defined( WIN32 ) || defined( _WIN32 ) || defined( WIN64 ) || defined( _WIN64 )
 #define WINDOWS
-#include <process.h>
-#include <stdlib.h>
-#include <windows.h>
 #else
 #define LINUX
-#include <pthread.h>
 #include <unistd.h>
 #endif
 
@@ -52,8 +48,9 @@ static inline std::string strrep(
 
 // Function to run a command and capture stdout
 [[maybe_unused]] static inline std::string runCommand(
-    std::function<void( void )> fun, const std::string &prefix )
+    [[maybe_unused]] std::function<void( void )> fun, [[maybe_unused]] const std::string &prefix )
 {
+#ifndef USE_WINDOWS
     fflush( stdout ); // clean everything first
     char buffer[2048];
     memset( buffer, 0, sizeof( buffer ) );
@@ -73,6 +70,9 @@ static inline std::string strrep(
     }
     str += "\n";
     return str;
+#else
+    throw std::logic_error( "runCommand in not implimented for windows yet" ) return "";
+#endif
 }
 
 

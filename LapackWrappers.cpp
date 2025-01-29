@@ -136,7 +136,7 @@ int Lapack<TYPE>::run_all_test()
     auto tests   = Lapack<TYPE>::list_all_tests();
     for ( auto test : tests ) {
         double error = 0;
-        int err = Lapack<TYPE>::run_test( test, N, error );
+        int err      = Lapack<TYPE>::run_test( test, N, error );
         if ( err != 0 ) {
             printf( "test_%s failed (%e)\n", test.c_str(), error );
             N_errors++;
