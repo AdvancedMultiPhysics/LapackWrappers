@@ -72,7 +72,7 @@ static inline std::string strrep(
     str += "\n";
     return str;
 #else
-    throw std::logic_error( "runCommand in not implimented for windows yet" ) return "";
+    throw std::logic_error( "runCommand in not implimented for windows yet" );
 #endif
 }
 
