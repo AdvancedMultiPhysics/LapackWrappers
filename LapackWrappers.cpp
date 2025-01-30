@@ -198,7 +198,7 @@ static inline bool approx_equal( int N, const TYPE *x1, const TYPE *x2, const do
 {
     bool pass = true;
     for ( int i = 0; i < N; i++ )
-        pass = pass && fabs( x1[i] - x2[i] ) <= tol * 0.5 * fabs( x1[i] + x2[i] );
+        pass = pass && std::abs( x1[i] - x2[i] ) <= tol * 0.5 * std::abs( x1[i] + x2[i] );
     return pass;
 }
 

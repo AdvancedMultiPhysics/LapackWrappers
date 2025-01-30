@@ -20,7 +20,8 @@
 
 
 // Choose the OS
-#if defined( WIN32 ) || defined( _WIN32 ) || defined( WIN64 ) || defined( _WIN64 )
+#if defined( WIN32 ) || defined( _WIN32 ) || defined( WIN64 ) || defined( _WIN64 ) || \
+    defined( _MSC_VER )
 #define WINDOWS
 #else
 #define LINUX
