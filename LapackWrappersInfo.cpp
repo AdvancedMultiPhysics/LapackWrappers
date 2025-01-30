@@ -22,9 +22,9 @@
 // Choose the OS
 #if defined( WIN32 ) || defined( _WIN32 ) || defined( WIN64 ) || defined( _WIN64 ) || \
     defined( _MSC_VER )
-#define WINDOWS
+#define USE_WINDOWS
 #else
-#define LINUX
+#define USE_LINUX
 #include <unistd.h>
 #endif
 
@@ -85,8 +85,7 @@ static void setenv( const char *name, const char *value )
 {
     static std::mutex lock;
     lock.lock();
-#if defined( WIN32 ) || defined( _WIN32 ) || defined( WIN64 ) || defined( _WIN64 ) || \
-    defined( _MSC_VER )
+#if USE_WINDOWS
     SetEnvironmentVariable( name, value ) != 0;
 #else
     if ( value != nullptr )
