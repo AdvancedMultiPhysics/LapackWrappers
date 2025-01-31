@@ -136,8 +136,8 @@ int Lapack<TYPE>::run_all_test()
     auto tests   = Lapack<TYPE>::list_all_tests();
     for ( auto test : tests ) {
         double error = 0;
-        int err      = Lapack<TYPE>::run_test( test, N, error );
-        if ( err != 0 ) {
+        bool pass    = Lapack<TYPE>::run_test( test, N, error );
+        if ( !pass ) {
             printf( "test_%s failed (%e)\n", test.c_str(), error );
             N_errors++;
         }
@@ -341,7 +341,7 @@ static bool test_random( int N, double &error )
         }
         delete[] x;
         if ( error != 0 )
-            return true;
+            return false;
         // If we did not encounter an error, check the Chi-Square Distribution
         double E  = ( K * N ) / static_cast<double>( Nb );
         double X2 = 0.0;
@@ -349,10 +349,10 @@ static bool test_random( int N, double &error )
             X2 += ( count[i] - E ) * ( count[i] - E ) / E;
         double X2c = 52.6; // Critical value for 0.999 (we will fail 0.1% of the time)
         error      = X2 / X2c;
-        return error > 1.0;
+        return error <= 1.0;
     } else if ( std::is_same_v<TYPE, std::complex<double>> ) {
         // Need to improve complex tests
-        return 0;
+        return true;
     } else {
         throw std::logic_error( "Not finihsed" );
     }
@@ -377,7 +377,7 @@ static bool test_copy( int N, double &error )
     }
     delete[] x1;
     delete[] x2;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 
@@ -404,7 +404,7 @@ static bool test_scal( int N, double &error )
     delete[] x0;
     delete[] x1;
     delete[] x2;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test nrm2
@@ -428,7 +428,7 @@ static bool test_nrm2( int N, double &error )
             N_errors++;
     }
     delete[] x;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test asum
@@ -454,7 +454,7 @@ static bool test_asum( int N, double &error )
             N_errors++;
     }
     delete[] x;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test dot
@@ -481,7 +481,7 @@ static bool test_dot( int N, double &error )
     }
     delete[] x1;
     delete[] x2;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test axpy
@@ -505,12 +505,12 @@ static bool test_axpy( int N, double &error )
         double err = L2Error( K, y1, y2 );
         error      = std::max( error, err );
     }
-    bool fail = error > 200 * epsilon<TYPE>();
+    bool pass = error <= 200 * epsilon<TYPE>();
     delete[] x;
     delete[] y0;
     delete[] y1;
     delete[] y2;
-    return fail;
+    return pass;
 }
 
 // Test gemv
@@ -549,7 +549,7 @@ static bool test_gemv( int N, double &error )
     delete[] y;
     delete[] y1;
     delete[] y2;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test gemm
@@ -589,7 +589,7 @@ static bool test_gemm( int N, double &error )
     delete[] C;
     delete[] C1;
     delete[] C2;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 
@@ -631,7 +631,7 @@ static bool test_gesv( int N, double &error )
     delete[] x2;
     delete[] b;
     delete[] IPIV;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test gtsv
@@ -688,7 +688,7 @@ static bool test_gtsv( int N, double &error )
     delete[] x2;
     delete[] b;
     delete[] IPIV;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 // Test gbsv
 template<typename TYPE>
@@ -742,7 +742,7 @@ static bool test_gbsv( int N, double &error )
     delete[] x2;
     delete[] b;
     delete[] IPIV;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test getrf
@@ -782,7 +782,7 @@ static bool test_getrf( int N, double &error )
     delete[] x2;
     delete[] b;
     delete[] IPIV;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test gttrf
@@ -836,7 +836,7 @@ static bool test_gttrf( int N, double &error )
     delete[] x2;
     delete[] b;
     delete[] IPIV;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test gbtrf
@@ -879,7 +879,7 @@ static bool test_gbtrf( int N, double &error )
     delete[] x2;
     delete[] b;
     delete[] IPIV;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test getrs
@@ -920,7 +920,7 @@ static bool test_getrs( int N, double &error )
     delete[] x2;
     delete[] b;
     delete[] IPIV;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test gttrs
@@ -978,7 +978,7 @@ static bool test_gttrs( int N, double &error )
     delete[] x2;
     delete[] b;
     delete[] IPIV;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test gbtrs
@@ -1022,7 +1022,7 @@ static bool test_gbtrs( int N, double &error )
     delete[] x2;
     delete[] b;
     delete[] IPIV;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 // Test getri
@@ -1082,7 +1082,7 @@ static bool test_getri( int N, double &error )
     delete[] b;
     delete[] IPIV;
     delete[] WORK;
-    return N_errors > 0;
+    return N_errors == 0;
 }
 
 
@@ -1093,61 +1093,61 @@ static bool test_getri( int N, double &error )
 template<typename TYPE>
 static bool test_gesv( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 template<typename TYPE>
 static bool test_gtsv( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 template<typename TYPE>
 static bool test_gbsv( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 template<typename TYPE>
 static bool test_getrf( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 template<typename TYPE>
 static bool test_gttrf( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 template<typename TYPE>
 static bool test_gbtrf( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 template<typename TYPE>
 static bool test_getrs( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 template<typename TYPE>
 static bool test_gttrs( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 template<typename TYPE>
 static bool test_gbtrs( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 template<typename TYPE>
 static bool test_getri( int, double & )
 {
-    throw std::logic_error( "test is disabled without external Lapack" );
+    printf( "test is disabled without external Lapack" );
     return false;
 }
 
@@ -1159,7 +1159,7 @@ static bool test_getri( int, double & )
  * Run a given test                                                *
  ******************************************************************/
 template<class TYPE>
-int Lapack<TYPE>::run_test( const std::string &routine, int N, double &error )
+bool Lapack<TYPE>::run_test( const std::string &routine, int N, double &error )
 {
     auto name = routine.substr( 1 );
     std::transform( name.begin(), name.end(), name.begin(), ::tolower );
@@ -1206,9 +1206,8 @@ int Lapack<TYPE>::run_test( const std::string &routine, int N, double &error )
         std::cerr << "Unknown test: " << name << std::endl;
         return -1;
     }
-    return pass ? 1 : 0;
-    ;
+    return pass;
 }
-template int Lapack<float>::run_test( const std::string &, int, double & );
-template int Lapack<double>::run_test( const std::string &, int, double & );
-template int Lapack<std::complex<double>>::run_test( const std::string &, int, double & );
+template bool Lapack<float>::run_test( const std::string &, int, double & );
+template bool Lapack<double>::run_test( const std::string &, int, double & );
+template bool Lapack<std::complex<double>>::run_test( const std::string &, int, double & );

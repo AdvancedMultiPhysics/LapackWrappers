@@ -24,10 +24,11 @@ static inline int64_t diff( std::chrono::time_point<std::chrono::system_clock> t
 template<typename TYPE>
 void run_test( const std::string &routine, int N, int &us, double &error, int &err )
 {
-    auto t1 = std::chrono::system_clock::now();
-    err     = Lapack<TYPE>::run_test( routine, N, error );
-    auto t2 = std::chrono::system_clock::now();
-    us      = static_cast<int>( diff( t1, t2 ) / N );
+    auto t1   = std::chrono::system_clock::now();
+    bool pass = Lapack<TYPE>::run_test( routine, N, error );
+    auto t2   = std::chrono::system_clock::now();
+    us        = static_cast<int>( diff( t1, t2 ) / N );
+    err       = pass ? 0 : 1;
 }
 
 

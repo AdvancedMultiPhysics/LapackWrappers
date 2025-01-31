@@ -642,9 +642,9 @@ public:
      * @param[in] N         The number of times to repeat the test (useful for thread-safety
      * testing)
      * @param[out] error    The largest error detected
-     * @return              The number of failures detected
+     * @return              Return true if test passed
      */
-    static int run_test( const std::string &routine, int N, double &error );
+    static bool run_test( const std::string &routine, int N, double &error );
 
     //! List all of the availible tests to run
     static std::vector<std::string> list_all_tests();
