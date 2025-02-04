@@ -1204,7 +1204,7 @@ bool Lapack<TYPE>::run_test( const std::string &routine, int N, double &error )
         pass = test_random<TYPE>( N, error );
     } else {
         std::cerr << "Unknown test: " << name << std::endl;
-        return -1;
+        return false;
     }
     return pass;
 }

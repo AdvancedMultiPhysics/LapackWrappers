@@ -88,6 +88,15 @@ ELSE()
 ENDIF()
 
 
+# Set compiler flags
+IF ( NOT CMAKE_CXX_STANDARD )
+    SET( CMAKE_CXX_STANDARD 17 )
+ENDIF()
+IF ( "${CMAKE_CXX_STANDARD}" LESS "17" )
+    MESSAGE( FATAL_ERROR "C++17 or newer required" )
+ENDIF()
+
+
 # Update rpath
 SET( CMAKE_INSTALL_RPATH "${${PROJ}_INSTALL_DIR}/lib" ${CMAKE_INSTALL_RPATH} )
 
