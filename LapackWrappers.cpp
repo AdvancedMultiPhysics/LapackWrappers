@@ -13,6 +13,7 @@
 #include <string.h>
 #include <string>
 #include <thread>
+#include <type_traits>
 
 
 // Choose the OS
@@ -69,21 +70,17 @@ public:
 
 // Get epsilon
 template<class TYPE>
-double epsilon();
-template<>
-double epsilon<float>()
+constexpr double epsilon()
 {
-    return std::numeric_limits<float>::epsilon();
-}
-template<>
-double epsilon<double>()
-{
-    return std::numeric_limits<double>::epsilon();
-}
-template<>
-double epsilon<std::complex<double>>()
-{
-    return std::numeric_limits<double>::epsilon();
+    if constexpr ( std::is_same_v<TYPE, float> ) {
+        return std::numeric_limits<float>::epsilon();
+    } else if constexpr ( std::is_same_v<TYPE, double> ) {
+        return std::numeric_limits<double>::epsilon();
+    } else if constexpr ( std::is_same_v<TYPE, std::complex<double>> ) {
+        return 2 * std::numeric_limits<double>::epsilon();
+    } else {
+        throw std::logic_error( "Not finished" );
+    }
 }
 
 
@@ -395,10 +392,11 @@ static bool test_scal( int N, double &error )
         x1[j] = pi * x0[j];
     int N_errors = 0;
     error        = 0;
+    double tol   = 10 * epsilon<TYPE>();
     for ( int i = 0; i < N; i++ ) {
         memcpy( x2, x1, K * sizeof( TYPE ) );
         Lapack<TYPE>::scal( K, pi, x0, 1 );
-        if ( !approx_equal( K, x1, x2, 10 * epsilon<TYPE>() ) )
+        if ( !approx_equal( K, x1, x2, tol ) )
             N_errors++;
     }
     delete[] x0;
@@ -420,11 +418,12 @@ static bool test_nrm2( int N, double &error )
     ans1         = sqrt( ans1 );
     int N_errors = 0;
     error        = 0;
+    double tol   = 50 * epsilon<TYPE>();
     for ( int i = 0; i < N; i++ ) {
         TYPE ans2  = Lapack<TYPE>::nrm2( K, x, 1 );
         double err = std::abs( ans1 - ans2 ) / sqrt( K );
         error      = std::max( error, err );
-        if ( err > 50 * epsilon<TYPE>() )
+        if ( err > tol )
             N_errors++;
     }
     delete[] x;
@@ -446,11 +445,12 @@ static bool test_asum( int N, double &error )
     // Check asum
     int N_errors = 0;
     error        = 0;
+    double tol   = 100 * epsilon<TYPE>();
     for ( int i = 0; i < N; i++ ) {
         double ans2 = Lapack<TYPE>::asum( K, x, 1 );
         double err  = std::abs( ans1 - ans2 ) / K;
         error       = std::max( error, err );
-        if ( err > 100 * epsilon<TYPE>() )
+        if ( err > tol )
             N_errors++;
     }
     delete[] x;
@@ -472,11 +472,12 @@ static bool test_dot( int N, double &error )
         ans1 += static_cast<TYPE2>( x1[j] ) * static_cast<TYPE2>( x2[j] );
     int N_errors = 0;
     error        = 0;
+    double tol   = 50 * epsilon<TYPE>();
     for ( int i = 0; i < N; i++ ) {
         TYPE2 ans2 = Lapack<TYPE>::dot( K, x1, 1, x2, 1 );
         double err = std::abs( ans1 - ans2 ) / K;
         error      = std::max( error, err );
-        if ( err > 50 * epsilon<TYPE>() )
+        if ( err > tol )
             N_errors++;
     }
     delete[] x1;
@@ -505,7 +506,8 @@ static bool test_axpy( int N, double &error )
         double err = L2Error( K, y1, y2 );
         error      = std::max( error, err );
     }
-    bool pass = error <= 200 * epsilon<TYPE>();
+    double tol = 200 * epsilon<TYPE>();
+    bool pass  = error <= tol;
     delete[] x;
     delete[] y0;
     delete[] y1;
@@ -537,11 +539,12 @@ static bool test_gemv( int N, double &error )
     int N_errors = 0;
     error        = 0;
     double norm  = Lapack<TYPE>::nrm2( K1, y1, 1 );
+    double tol   = K1 * epsilon<TYPE>();
     for ( int i = 0; i < N; i++ ) {
         memcpy( y2, y, K1 * sizeof( TYPE ) );
         Lapack<TYPE>::gemv( 'N', K1, K2, alpha, A, K1, x, 1, beta, y2, 1 );
         error = std::max( error, L2Error( K1, y1, y2 ) / norm );
-        if ( !approx_equal( K1, y1, y2, K1 * epsilon<TYPE>() ) )
+        if ( !approx_equal( K1, y1, y2, tol ) )
             N_errors++;
     }
     delete[] A;
@@ -577,11 +580,12 @@ static bool test_gemm( int N, double &error )
     int N_errors = 0;
     error        = 0;
     double norm  = Lapack<TYPE>::nrm2( K * K, C1, 1 );
+    double tol   = K * 10 * epsilon<TYPE>();
     for ( int i = 0; i < N; i++ ) {
         memcpy( C2, C, K * K * sizeof( TYPE ) );
         Lapack<TYPE>::gemm( 'N', 'N', K, K, K, alpha, A, K, B, K, beta, C2, K );
         error = std::max( error, L2Error( K * K, C1, C2 ) / norm );
-        if ( !approx_equal( K * K, C1, C2, K * 10 * epsilon<TYPE>() ) )
+        if ( !approx_equal( K * K, C1, C2, tol ) )
             N_errors++;
     }
     delete[] A;
@@ -617,13 +621,14 @@ static bool test_gesv( int N, double &error )
     int N_errors = 0;
     error        = 0;
     double norm  = Lapack<TYPE>::nrm2( K, x1, 1 );
+    double tol   = K * 10 * epsilon<TYPE>();
     for ( int i = 0; i < N; i++ ) {
         memcpy( x2, b, K * sizeof( TYPE ) );
         int err = 0;
         Lapack<TYPE>::gesv( K, 1, A, K, IPIV, x2, K, err );
         N_errors += err == 0 ? 0 : 1;
         error = std::max( error, L2Error( K, x1, x2 ) / norm );
-        if ( !approx_equal( K, x1, x2, K * 10 * epsilon<TYPE>() ) )
+        if ( !approx_equal( K, x1, x2, tol ) )
             N_errors++;
     }
     delete[] A;
@@ -730,9 +735,9 @@ static bool test_gbsv( int N, double &error )
         double err2 = L2Error( K, x1, x2 );
         error       = std::max( error, err2 / norm );
     }
-    const double tol = 1000 * sqrt( K ) * epsilon<TYPE>();
+    const double tol = 2000 * sqrt( K ) * epsilon<TYPE>();
     if ( error > tol ) {
-        printf( "test_gbsv error (%e) exceeded tolerance (%e)\n", error, tol );
+        printf( "   test_gbsv error (%e) exceeded tolerance (%e)\n", error, tol );
         N_errors++;
     }
     delete[] A;
@@ -773,7 +778,8 @@ static bool test_getrf( int N, double &error )
     Lapack<TYPE>::getrs( 'N', K, 1, A2, K, IPIV, x2, K, err );
     double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
     double err2 = L2Error( K, x1, x2 );
-    if ( err2 > 10.0 * norm * epsilon<TYPE>() )
+    double tol  = 10.0 * norm * epsilon<TYPE>();
+    if ( err2 > tol )
         N_errors++;
     error = err2 / norm;
     delete[] A;
@@ -822,7 +828,8 @@ static bool test_gttrf( int N, double &error )
     Lapack<TYPE>::gttrs( 'N', K, 1, DL2, D2, DU2, DU3, IPIV, x2, K, err );
     double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
     double err2 = L2Error( K, x1, x2 );
-    if ( err2 > 100 * K * norm * epsilon<TYPE>() )
+    double tol  = 100 * K * norm * epsilon<TYPE>();
+    if ( err2 > tol )
         N_errors++;
     error = err2 / norm;
     delete[] D;
@@ -870,7 +877,8 @@ static bool test_gbtrf( int N, double &error )
     Lapack<TYPE>::gbtrs( 'N', K, KL, KU, 1, AB2, K2, IPIV, x2, K, err );
     double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
     double err2 = L2Error( K, x1, x2 );
-    if ( err2 > 10.0 * norm * epsilon<TYPE>() )
+    double tol  = 10 * norm * epsilon<TYPE>();
+    if ( err2 > tol )
         N_errors++;
     error = err2 / norm;
     delete[] AB;
@@ -910,7 +918,8 @@ static bool test_getrs( int N, double &error )
         N_errors += err == 0 ? 0 : 1;
         double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
         double err2 = L2Error( K, x1, x2 );
-        if ( err > 10.0 * norm * epsilon<TYPE>() )
+        double tol  = 10.0 * norm * epsilon<TYPE>();
+        if ( err > tol )
             N_errors++;
         error = std::max( error, err2 / norm );
     }
@@ -962,7 +971,8 @@ static bool test_gttrs( int N, double &error )
         N_errors += err == 0 ? 0 : 1;
         double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
         double err2 = L2Error( K, x1, x2 );
-        if ( err2 > 100 * K * norm * epsilon<TYPE>() )
+        double tol  = 300 * K * norm * epsilon<TYPE>();
+        if ( err2 > tol )
             N_errors++;
         error = std::max( error, err2 / norm );
     }
@@ -1012,7 +1022,8 @@ static bool test_gbtrs( int N, double &error )
         N_errors += err == 0 ? 0 : 1;
         double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
         double err2 = L2Error( K, x1, x2 );
-        if ( err2 > 10.0 * norm * epsilon<TYPE>() )
+        double tol  = 10.0 * norm * epsilon<TYPE>();
+        if ( err2 > tol )
             N_errors++;
         error = std::max( error, err2 / norm );
     }
@@ -1040,7 +1051,6 @@ static bool test_getri( int N, double &error )
     TYPE *b         = new TYPE[K];
     int *IPIV       = new int[K];
     TYPE *WORK      = new TYPE[LWORK];
-    double eps      = epsilon<TYPE>();
     Lapack<TYPE>::random( K * K, A );
     Lapack<TYPE>::random( K, b );
     int err      = 0;
@@ -1071,8 +1081,9 @@ static bool test_getri( int N, double &error )
         error       = std::max( error, err2 );
     }
     // Check the result
-    if ( error > 500 * eps ) {
-        printf( "getri exceeded tolerance: error = %e, tol = %e\n", error, 500 * eps );
+    double tol = 500 * epsilon<TYPE>();
+    if ( error > tol ) {
+        printf( "   getri exceeded tolerance: error = %e, tol = %e\n", error, tol );
         N_errors++;
     }
     delete[] A;

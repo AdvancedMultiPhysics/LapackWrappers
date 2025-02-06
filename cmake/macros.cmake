@@ -135,3 +135,30 @@ FUNCTION( ADD_DISTCLEAN ${ARGN} )
     ENDIF()
 ENDFUNCTION()
 
+
+# Get all propreties that cmake supports
+IF ( NOT CMAKE_PROPERTY_LIST )
+    EXECUTE_PROCESS( COMMAND cmake --help-property-list OUTPUT_VARIABLE CMAKE_PROPERTY_LIST )
+    STRING( REGEX REPLACE ";" "\\\\;" CMAKE_PROPERTY_LIST "${CMAKE_PROPERTY_LIST}" )
+    STRING( REGEX REPLACE "\n" ";" CMAKE_PROPERTY_LIST "${CMAKE_PROPERTY_LIST}" )
+    LIST( REMOVE_DUPLICATES CMAKE_PROPERTY_LIST )
+ENDIF()
+
+
+# Print properties on target
+FUNCTION( PRINT_TARGET_PROPERTIES target )
+    IF ( NOT TARGET ${target} )
+        RETURN()
+    ENDIF()
+    FOREACH( property ${CMAKE_PROPERTY_LIST} )
+        STRING( REPLACE "<CONFIG>" "${CMAKE_BUILD_TYPE}" property ${property} )
+        GET_PROPERTY( tmp TARGET ${target} PROPERTY ${property} SET )
+        IF ( tmp )
+            GET_TARGET_PROPERTY( value ${target} ${property} )
+            IF ( value )
+                MESSAGE( "${target}-${property} = ${value}" )
+            ENDIF()
+        ENDIF()
+    ENDFOREACH()
+ENDFUNCTION()
+

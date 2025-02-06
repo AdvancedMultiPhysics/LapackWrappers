@@ -57,8 +57,12 @@ ELSE()
     SET_COMPILER_FLAGS()
     IF ( NOT ( DISABLE_BLAS OR DISABLE_LAPACK ) )
         FIND_PACKAGE( BlasLapack )
+        IF ( LAPACK_FOUND )
+            INCLUDE( cmake/WriteLapackHeader.cmake )
+        ENDIF()
     ENDIF()
 ENDIF()
+SET( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
 
 
 # Set shared/static library
