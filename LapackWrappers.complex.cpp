@@ -61,7 +61,7 @@ inline CBLAS_TRANSPOSE TRANS2( char TRANS )
 
 
 // Lock for thread safety
-static std::mutex d_mutex;
+[[maybe_unused]] static std::mutex d_mutex;
 
 
 // Helper functions
