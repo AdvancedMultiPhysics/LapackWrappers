@@ -22,7 +22,9 @@
 // Choose the OS
 #if defined( WIN32 ) || defined( _WIN32 ) || defined( WIN64 ) || defined( _WIN64 ) || \
     defined( _MSC_VER )
+#include "windows.h"  // Must be before any other windows headers
 #define USE_WINDOWS
+#include "winbase.h"
 #else
 #define USE_LINUX
 #include <unistd.h>
@@ -85,7 +87,7 @@ static void setenv( const char *name, const char *value )
 {
     static std::mutex lock;
     lock.lock();
-#if USE_WINDOWS
+#ifdef USE_WINDOWS
     SetEnvironmentVariable( name, value );
 #else
     if ( value != nullptr )
