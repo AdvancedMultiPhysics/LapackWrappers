@@ -86,7 +86,7 @@ static void setenv( const char *name, const char *value )
     static std::mutex lock;
     lock.lock();
 #if USE_WINDOWS
-    SetEnvironmentVariable( name, value ) != 0;
+    SetEnvironmentVariable( name, value );
 #else
     if ( value != nullptr )
         ::setenv( name, value, 1 );
