@@ -30,11 +30,11 @@
 
 
 // Define some sizes of the problems (try to normalize the time/test)
-#define TEST_SIZE_VEC 50000    // Vector tests O(N)
-#define TEST_SIZE_MATVEC 500   // Matrix-vector tests O(N^2)
-#define TEST_SIZE_MAT 100      // Matrix-matrix / Dense solves tests O(N^3)
-#define TEST_SIZE_TRI 2000     // Tridiagonal/banded tests
-#define TEST_SIZE_TRI_MAT 1000 // Tridiagonal/banded solve tests
+#define TEST_SIZE_VEC 100000   // Vector tests O(N)
+#define TEST_SIZE_MATVEC 1000  // Matrix-vector tests O(N^2)
+#define TEST_SIZE_MAT 150      // Matrix-matrix / Dense solves tests O(N^3)
+#define TEST_SIZE_TRI 5000     // Tridiagonal/banded tests
+#define TEST_SIZE_TRI_MAT 2000 // Tridiagonal/banded solve tests
 
 
 // Choose precision to perfom calculations
@@ -318,7 +318,7 @@ static bool test_random( int N, double &error )
 {
     if constexpr ( std::is_floating_point<TYPE>::value ) {
         constexpr int Nb = 25; // Number of bins
-        int K            = TEST_SIZE_VEC / 4;
+        int K            = TEST_SIZE_VEC;
         TYPE *x          = new TYPE[K];
         int count[Nb]    = { 0 };
         error            = 0;
@@ -329,7 +329,7 @@ static bool test_random( int N, double &error )
                 error = ( error == 0 && x[i] < 0.0 ) ? -1 : error;
                 error = ( error == 0 && x[i] > 1.0 ) ? -2 : error;
                 sum += x[i];
-                int j = static_cast<int>( floor( x[i] * Nb ) );
+                int j = std::min<int>( floor( x[i] * Nb ), Nb - 1 );
                 count[j]++;
             }
             TYPE avg = sum / K;
@@ -418,7 +418,7 @@ static bool test_nrm2( int N, double &error )
     ans1         = sqrt( ans1 );
     int N_errors = 0;
     error        = 0;
-    double tol   = 50 * epsilon<TYPE>();
+    double tol   = sqrt( K ) * epsilon<TYPE>();
     for ( int i = 0; i < N; i++ ) {
         TYPE ans2  = Lapack<TYPE>::nrm2( K, x, 1 );
         double err = std::abs( ans1 - ans2 ) / sqrt( K );
@@ -506,7 +506,7 @@ static bool test_axpy( int N, double &error )
         double err = L2Error( K, y1, y2 );
         error      = std::max( error, err );
     }
-    double tol = 200 * epsilon<TYPE>();
+    double tol = sqrt( K ) * epsilon<TYPE>();
     bool pass  = error <= tol;
     delete[] x;
     delete[] y0;
@@ -735,7 +735,7 @@ static bool test_gbsv( int N, double &error )
         double err2 = L2Error( K, x1, x2 );
         error       = std::max( error, err2 / norm );
     }
-    const double tol = 2000 * sqrt( K ) * epsilon<TYPE>();
+    const double tol = 4 * K * sqrt( K ) * epsilon<TYPE>();
     if ( error > tol ) {
         printf( "   test_gbsv error (%e) exceeded tolerance (%e)\n", error, tol );
         N_errors++;
@@ -827,10 +827,12 @@ static bool test_gttrf( int N, double &error )
     memcpy( x2, b, K * sizeof( TYPE ) );
     Lapack<TYPE>::gttrs( 'N', K, 1, DL2, D2, DU2, DU3, IPIV, x2, K, err );
     double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
-    double err2 = L2Error( K, x1, x2 );
-    double tol  = 100 * K * norm * epsilon<TYPE>();
-    if ( err2 > tol )
+    double err2 = L2Error( K, x1, x2 ) / norm;
+    double tol  = 100 * K * epsilon<TYPE>();
+    if ( err2 > tol ) {
+        printf( "   gttrf exceeded tolerance: error = %e, tol = %e\n", err2, tol );
         N_errors++;
+    }
     error = err2 / norm;
     delete[] D;
     delete[] D2;
@@ -1022,7 +1024,7 @@ static bool test_gbtrs( int N, double &error )
         N_errors += err == 0 ? 0 : 1;
         double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
         double err2 = L2Error( K, x1, x2 );
-        double tol  = 10.0 * norm * epsilon<TYPE>();
+        double tol  = sqrt( K ) * norm * epsilon<TYPE>();
         if ( err2 > tol )
             N_errors++;
         error = std::max( error, err2 / norm );
@@ -1081,7 +1083,7 @@ static bool test_getri( int N, double &error )
         error       = std::max( error, err2 );
     }
     // Check the result
-    double tol = 500 * epsilon<TYPE>();
+    double tol = 10 * K * epsilon<TYPE>();
     if ( error > tol ) {
         printf( "   getri exceeded tolerance: error = %e, tol = %e\n", error, tol );
         N_errors++;

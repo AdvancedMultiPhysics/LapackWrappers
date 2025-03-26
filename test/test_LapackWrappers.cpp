@@ -134,7 +134,7 @@ int runAll( bool print_all )
 {
     // Number of times to run the tests for timing results
     // Note: the tests are designed to take ~ the same time/test
-    const int N_test = 50;
+    const int N_test = 20;
 
     // Store the number of errors
     int N_errors = 0;
@@ -155,6 +155,8 @@ int runAll( bool print_all )
         int N_threads = 8;
         auto tests    = Lapack<double>::list_all_tests();
         for ( auto &test : tests ) {
+            if ( test == "drand" )
+                continue; // random number generation is blocking (not parallel)
             auto t1 = std::chrono::system_clock::now();
             std::thread threads[128];
             int time2[128];

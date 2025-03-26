@@ -22,7 +22,7 @@
 // Choose the OS
 #if defined( WIN32 ) || defined( _WIN32 ) || defined( WIN64 ) || defined( _WIN64 ) || \
     defined( _MSC_VER )
-#include "windows.h"  // Must be before any other windows headers
+#include "windows.h" // Must be before any other windows headers
 #define USE_WINDOWS
 #include "winbase.h"
 #else
