@@ -151,29 +151,38 @@ template int Lapack<std::complex<double>>::run_all_test();
 
 
 // Fill a vector with random TYPE precision data
+static auto create_mt19937()
+{
+    std::random_device rd;
+    std::mt19937 gen( rd() );
+    return gen;
+}
+static auto create_mt19937_64()
+{
+    std::random_device rd;
+    std::mt19937_64 gen( rd() );
+    return gen;
+}
+static std::mutex lock_random;
 template<>
 void Lapack<float>::random( int N, float *data )
 {
-    static std::mutex lock;
-    static std::random_device rd;
-    static std::mt19937 gen( rd() );
+    lock_random.lock();
+    static auto gen = create_mt19937();
     static std::uniform_real_distribution<float> dis( 0, 1 );
-    lock.lock();
     for ( int i = 0; i < N; i++ )
         data[i] = dis( gen );
-    lock.unlock();
+    lock_random.unlock();
 }
 template<>
 void Lapack<double>::random( int N, double *data )
 {
-    static std::mutex lock;
-    static std::random_device rd;
-    static std::mt19937_64 gen( rd() );
+    lock_random.lock();
+    static auto gen = create_mt19937_64();
     static std::uniform_real_distribution<double> dis( 0, 1 );
-    lock.lock();
     for ( int i = 0; i < N; i++ )
         data[i] = dis( gen );
-    lock.unlock();
+    lock_random.unlock();
 }
 template<>
 void Lapack<std::complex<double>>::random( int N, std::complex<double> *data )
@@ -316,37 +325,36 @@ int run_basic_tests()
 template<typename TYPE>
 static bool test_random( int N, double &error )
 {
+    error = 0;
     if constexpr ( std::is_floating_point<TYPE>::value ) {
-        constexpr int Nb = 25; // Number of bins
-        int K            = TEST_SIZE_VEC;
-        TYPE *x          = new TYPE[K];
-        int count[Nb]    = { 0 };
-        error            = 0;
-        for ( int it = 0; it < N; it++ ) {
+        constexpr int Nb  = 25;  // Number of bins
+        constexpr int Nit = 100; // Number of tests to run
+        int K             = N * 1000;
+        TYPE *x           = new TYPE[K];
+        bool rangeError   = false;
+        for ( int it = 0; it < Nit; it++ ) {
+            int count[Nb] = { 0 };
+            // Load the random numbers and perform basic sanity checks
             Lapack<TYPE>::random( K, x );
-            TYPE sum = 0;
             for ( int i = 0; i < K; i++ ) {
-                error = ( error == 0 && x[i] < 0.0 ) ? -1 : error;
-                error = ( error == 0 && x[i] > 1.0 ) ? -2 : error;
-                sum += x[i];
-                int j = std::min<int>( floor( x[i] * Nb ), Nb - 1 );
+                rangeError = rangeError || x[i] < 0.0 || x[i] > 1.0;
+                int j      = std::min<int>( floor( x[i] * Nb ), Nb - 1 );
                 count[j]++;
             }
-            TYPE avg = sum / K;
-            if ( error == 0 && ( avg < 0.35 || avg > 0.65 ) )
-                error = -3;
+            // Check the Chi-Square Distribution
+            double E  = static_cast<double>( K ) / static_cast<double>( Nb );
+            double X2 = 0.0;
+            for ( int i = 0; i < Nb; i++ )
+                X2 += ( count[i] - E ) * ( count[i] - E ) / E;
+            if ( X2 > 52.62 )
+                error++;
         }
         delete[] x;
-        if ( error != 0 )
+        if ( rangeError ) {
+            error = -1;
             return false;
-        // If we did not encounter an error, check the Chi-Square Distribution
-        double E  = ( K * N ) / static_cast<double>( Nb );
-        double X2 = 0.0;
-        for ( int i = 0; i < Nb; i++ )
-            X2 += ( count[i] - E ) * ( count[i] - E ) / E;
-        double X2c = 52.6; // Critical value for 0.999 (we will fail 0.1% of the time)
-        error      = X2 / X2c;
-        return error <= 1.0;
+        }
+        return error <= 3;
     } else if ( std::is_same_v<TYPE, std::complex<double>> ) {
         // Need to improve complex tests
         return true;
@@ -673,9 +681,9 @@ static bool test_gtsv( int N, double &error )
         N_errors += err == 0 ? 0 : 1;
         if ( err != 0 )
             printf( "Error calling gtsv (%i)\n", err );
-        double err2 = L2Error( N, x1, x2 );
         double norm = Lapack<TYPE>::nrm2( N, x1, 1 );
-        error       = std::max( error, err2 / norm );
+        double err2 = L2Error( N, x1, x2 ) / norm;
+        error       = std::max( error, err2 );
     }
     double tol = 2e4 * epsilon<TYPE>();
     if ( error > tol ) {
@@ -732,8 +740,8 @@ static bool test_gbsv( int N, double &error )
         Lapack<TYPE>::gbsv( K, KL, KU, 1, AB2, K2, IPIV, x2, K, err );
         N_errors += err == 0 ? 0 : 1;
         double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
-        double err2 = L2Error( K, x1, x2 );
-        error       = std::max( error, err2 / norm );
+        double err2 = L2Error( K, x1, x2 ) / norm;
+        error       = std::max( error, err2 );
     }
     const double tol = 4 * K * sqrt( K ) * epsilon<TYPE>();
     if ( error > tol ) {
@@ -777,11 +785,11 @@ static bool test_getrf( int N, double &error )
     memcpy( x2, b, K * sizeof( TYPE ) );
     Lapack<TYPE>::getrs( 'N', K, 1, A2, K, IPIV, x2, K, err );
     double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
-    double err2 = L2Error( K, x1, x2 );
-    double tol  = 10.0 * norm * epsilon<TYPE>();
+    double err2 = L2Error( K, x1, x2 ) / norm;
+    double tol  = 10.0 * epsilon<TYPE>();
     if ( err2 > tol )
         N_errors++;
-    error = err2 / norm;
+    error = err2;
     delete[] A;
     delete[] A2;
     delete[] x1;
@@ -833,7 +841,7 @@ static bool test_gttrf( int N, double &error )
         printf( "   gttrf exceeded tolerance: error = %e, tol = %e\n", err2, tol );
         N_errors++;
     }
-    error = err2 / norm;
+    error = err2;
     delete[] D;
     delete[] D2;
     delete[] DL;
@@ -878,11 +886,11 @@ static bool test_gbtrf( int N, double &error )
     memcpy( x2, b, K * sizeof( TYPE ) );
     Lapack<TYPE>::gbtrs( 'N', K, KL, KU, 1, AB2, K2, IPIV, x2, K, err );
     double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
-    double err2 = L2Error( K, x1, x2 );
-    double tol  = 10 * norm * epsilon<TYPE>();
+    double err2 = L2Error( K, x1, x2 ) / norm;
+    double tol  = 10 * epsilon<TYPE>();
     if ( err2 > tol )
         N_errors++;
-    error = err2 / norm;
+    error = err2;
     delete[] AB;
     delete[] AB2;
     delete[] x1;
@@ -919,11 +927,11 @@ static bool test_getrs( int N, double &error )
         Lapack<TYPE>::getrs( 'N', K, 1, A2, K, IPIV, x2, K, err );
         N_errors += err == 0 ? 0 : 1;
         double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
-        double err2 = L2Error( K, x1, x2 );
-        double tol  = 10.0 * norm * epsilon<TYPE>();
+        double err2 = L2Error( K, x1, x2 ) / norm;
+        double tol  = 10.0 * epsilon<TYPE>();
         if ( err > tol )
             N_errors++;
-        error = std::max( error, err2 / norm );
+        error = std::max( error, err2 );
     }
     delete[] A;
     delete[] A2;
@@ -972,11 +980,11 @@ static bool test_gttrs( int N, double &error )
         Lapack<TYPE>::gttrs( 'N', K, 1, DL2, D2, DU2, DU4, IPIV, x2, K, err );
         N_errors += err == 0 ? 0 : 1;
         double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
-        double err2 = L2Error( K, x1, x2 );
-        double tol  = 300 * K * norm * epsilon<TYPE>();
+        double err2 = L2Error( K, x1, x2 ) / norm;
+        double tol  = 2 * sqrt( K ) * K * epsilon<TYPE>();
         if ( err2 > tol )
             N_errors++;
-        error = std::max( error, err2 / norm );
+        error = std::max( error, err2 );
     }
     delete[] D;
     delete[] D2;
@@ -1023,11 +1031,11 @@ static bool test_gbtrs( int N, double &error )
         Lapack<TYPE>::gbtrs( 'N', K, KL, KU, 1, AB2, K2, IPIV, x2, K, err );
         N_errors += err == 0 ? 0 : 1;
         double norm = Lapack<TYPE>::nrm2( K, x1, 1 );
-        double err2 = L2Error( K, x1, x2 );
-        double tol  = sqrt( K ) * norm * epsilon<TYPE>();
+        double err2 = L2Error( K, x1, x2 ) / norm;
+        double tol  = sqrt( K ) * epsilon<TYPE>();
         if ( err2 > tol )
             N_errors++;
-        error = std::max( error, err2 / norm );
+        error = std::max( error, err2 );
     }
     delete[] AB;
     delete[] AB2;
