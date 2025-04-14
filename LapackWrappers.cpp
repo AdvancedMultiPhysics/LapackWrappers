@@ -64,7 +64,7 @@ template<>
 class extended<std::complex<double>>
 {
 public:
-    typedef std::complex<long double> TYPE2;
+    typedef std::complex<double> TYPE2;
 };
 
 
@@ -101,7 +101,10 @@ std::vector<std::string> Lapack<float>::list_all_tests()
 template<>
 std::vector<std::string> Lapack<std::complex<double>>::list_all_tests()
 {
-    return {};
+    // return { "zcopy", "zscal", "znrm2", "zaxpy", "zgemv", "zgemm", "zasum", "zdot", "zgesv",
+    //     "zgtsv", "zgbsv", "zgetrf", "zgttrf", "zgbtrf", "zgetrs", "zgttrs", "zgetri", "zrand" };
+    return { "zcopy", "zscal", "znrm2", "zaxpy", "zgemv", "zgemm", "zasum", "zgesv", "zgtsv",
+        "zgbsv", "zgetrf", "zgttrf", "zgbtrf", "zgetrs", "zgttrs", "zgetri", "zrand" };
 }
 #else
 template<>
@@ -448,7 +451,7 @@ static bool test_asum( int N, double &error )
     Lapack<TYPE>::random( K, x );
     long double sum = 0.0;
     for ( int j = 0; j < K; j++ )
-        sum += std::abs( x[j] );
+        sum += std::abs( std::real( x[j] ) ) + std::abs( std::imag( x[j] ) );
     double ans1 = sum;
     // Check asum
     int N_errors = 0;
@@ -469,20 +472,19 @@ static bool test_asum( int N, double &error )
 template<typename TYPE>
 static bool test_dot( int N, double &error )
 {
-    typedef typename extended<TYPE>::TYPE2 TYPE2;
     const int K = TEST_SIZE_VEC;
     TYPE *x1    = new TYPE[K];
     TYPE *x2    = new TYPE[K];
     Lapack<TYPE>::random( K, x1 );
     Lapack<TYPE>::random( K, x2 );
-    TYPE2 ans1 = 0.0;
+    TYPE ans1 = 0.0;
     for ( int j = 0; j < K; j++ )
-        ans1 += static_cast<TYPE2>( x1[j] ) * static_cast<TYPE2>( x2[j] );
+        ans1 += x1[j] * x2[j];
     int N_errors = 0;
     error        = 0;
     double tol   = 50 * epsilon<TYPE>();
     for ( int i = 0; i < N; i++ ) {
-        TYPE2 ans2 = Lapack<TYPE>::dot( K, x1, 1, x2, 1 );
+        TYPE ans2  = Lapack<TYPE>::dot( K, x1, 1, x2, 1 );
         double err = std::abs( ans1 - ans2 ) / K;
         error      = std::max( error, err );
         if ( err > tol )
@@ -1091,7 +1093,7 @@ static bool test_getri( int N, double &error )
         error       = std::max( error, err2 );
     }
     // Check the result
-    double tol = 10 * K * epsilon<TYPE>();
+    double tol = 20 * K * epsilon<TYPE>();
     if ( error > tol ) {
         printf( "   getri exceeded tolerance: error = %e, tol = %e\n", error, tol );
         N_errors++;

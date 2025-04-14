@@ -184,7 +184,9 @@ public:
 
     /*!
      * \brief   asum
-     * \details  asum sums a vector
+     * \details  asum sums the absolute value of the components of a vector
+     *    Important when using std::complex this returns the sum of the absolute
+     *    value of the real and imaginary parts NOT the sum of std::abs(x(i))
      * @param[in]  N        The number of values to copy
      * @param[in]  x        The source vector
      * @param[in]  INCX     The spacing between points in x

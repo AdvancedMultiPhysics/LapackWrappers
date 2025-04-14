@@ -10,6 +10,7 @@
 // Define complex types for lapack interface
 #if defined( USE_MKL )
 typedef MKL_Complex16 Complex;
+static_assert( sizeof( MKL_Complex16 ) == sizeof( std::complex<double> ) );
 #else
 typedef double _Complex Complex;
 #endif
@@ -284,6 +285,8 @@ void Lapack<std::complex<double>>::gemm( char TRANSA, char TRANSB, int M, int N,
 template<>
 double Lapack<std::complex<double>>::asum( int N, const std::complex<double> *DX_, int INCX )
 {
+    if ( N == 0 )
+        return 0;
     auto DX = reinterpret_cast<const Complex *>( DX_ );
 #ifdef USE_ATLAS
     return cblas_dzasum( N, DX, INCX );
@@ -320,11 +323,9 @@ std::complex<double> Lapack<std::complex<double>>::dot(
     auto rtn = FORTRAN_WRAPPER( ::zdotc )( &Np, (double *) DX, &INCXp, (double *) DY, &INCYp );
     return std::complex<double>( rtn.r, rtn.i );
 #elif defined( USE_MKL )
-    std::complex<double> rtn;
-    FORTRAN_WRAPPER( ::zdotc )
-    ( (Complex *) &rtn, &N, const_cast<Complex *>( DX ), &INCX, const_cast<Complex *>( DY ),
-        &INCY );
-    return rtn;
+    MKL_Complex16 c;
+    zdotc( &c, &N, const_cast<Complex *>( DX ), &INCX, const_cast<Complex *>( DY ), &INCY );
+    return { c.real, c.imag };
 #else
     return FORTRAN_WRAPPER( ::zdotc )(
         &N, const_cast<Complex *>( DX ), &INCX, const_cast<Complex *>( DY ), &INCY );
