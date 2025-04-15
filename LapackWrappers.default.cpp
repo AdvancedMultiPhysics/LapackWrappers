@@ -26,6 +26,39 @@ static inline bool getTrans( char TRANS )
 }
 
 
+// lamch
+template<typename TYPE>
+TYPE Lapack<TYPE>::lamch( char cmach )
+{
+    if ( cmach == 'E' ) {
+        static_assert( std::numeric_limits<TYPE>::radix == 2 );
+        return 0.5 * std::numeric_limits<TYPE>::epsilon();
+    } else if ( cmach == 'S' ) {
+        return std::numeric_limits<TYPE>::min();
+    } else if ( cmach == 'B' ) {
+        return std::numeric_limits<TYPE>::radix;
+    } else if ( cmach == 'P' ) {
+        return std::numeric_limits<TYPE>::epsilon();
+    } else if ( cmach == 'N' ) {
+        return std::numeric_limits<TYPE>::digits;
+    } else if ( cmach == 'R' ) {
+        return 1;
+    } else if ( cmach == 'M' ) {
+        return std::numeric_limits<TYPE>::min_exponent;
+    } else if ( cmach == 'U' ) {
+        return std::numeric_limits<TYPE>::min();
+    } else if ( cmach == 'L' ) {
+        return std::numeric_limits<TYPE>::max_exponent;
+    } else if ( cmach == 'O' ) {
+        return std::numeric_limits<TYPE>::max();
+    } else {
+        return 0;
+    }
+}
+template float Lapack<float>::lamch( char );
+template double Lapack<double>::lamch( char );
+
+
 // Define the member functions
 template<class TYPE>
 void Lapack<TYPE>::copy( int N, const TYPE *DX, int INCX, TYPE *DY, int INCY )

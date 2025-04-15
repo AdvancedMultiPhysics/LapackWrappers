@@ -47,6 +47,27 @@ inline CBLAS_TRANSPOSE TRANS2( char TRANS )
 [[maybe_unused]] static std::mutex d_mutex;
 
 
+// lamch
+#undef dlamch
+template<>
+double Lapack<double>::lamch( char cmach )
+{
+#ifdef USE_ATLAS
+    return clapack_dlamch( cmach );
+#elif defined( USE_ACML )
+    return ::dlamch( cmach );
+#elif defined( USE_VECLIB )
+    return FORTRAN_WRAPPER( ::dlamch )( &cmach );
+#elif defined( USE_OPENBLAS )
+    return FORTRAN_WRAPPER( ::dlamch )( &cmach, 1 );
+#elif defined( USE_LAPACKE )
+    return ::LAPACKE_dlamch( cmach );
+#else
+    return FORTRAN_WRAPPER( ::dlamch )( &cmach );
+#endif
+}
+
+
 // Define the member functions
 #undef dcopy
 template<>

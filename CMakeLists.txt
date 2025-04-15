@@ -137,7 +137,7 @@ IF ( DISABLE_BLAS OR DISABLE_LAPACK )
     SET( LapackWrappersSource LapackWrappers.cpp LapackWrappersInfo.cpp LapackWrappers.default.cpp )
     ADD_DEFINITIONS( -DDISABLE_LAPACK )
 ELSE()
-    SET( LapackWrappersSource LapackWrappers.cpp LapackWrappers.double.cpp LapackWrappers.float.cpp LapackWrappers.complex.cpp LapackWrappersInfo.cpp LapackWrappersMachineParams.cpp )
+    SET( LapackWrappersSource LapackWrappers.cpp LapackWrappers.double.cpp LapackWrappers.float.cpp LapackWrappers.complex.cpp LapackWrappersInfo.cpp )
 ENDIF()
 
 

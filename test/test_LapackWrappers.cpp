@@ -84,7 +84,9 @@ template<class TYPE>
 int runBasic( bool print_all )
 {
     if ( print_all ) {
-        printf( "\nRunning %s precision basic tests\n", getTypeString<TYPE>() );
+        printf( "\nMachine parameters (%s)\n", getTypeString<TYPE>() );
+        printf( "%s\n", Lapack<TYPE>::machineParams().print().data() );
+        printf( "Running %s precision basic tests\n", getTypeString<TYPE>() );
         auto tests = Lapack<TYPE>::list_all_tests();
         if ( tests.empty() ) {
             printf( "   No tests detected\n" );
@@ -101,6 +103,7 @@ int runBasic( bool print_all )
     } else if ( N_errors != 0 ) {
         printf( "  failed %i %cp tests\n", N_errors, getPrefix<TYPE>() );
     }
+    printf( "\n" );
     return N_errors;
 }
 
