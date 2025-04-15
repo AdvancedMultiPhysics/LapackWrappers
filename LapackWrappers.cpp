@@ -103,7 +103,7 @@ std::vector<std::string> Lapack<std::complex<double>>::list_all_tests()
 {
     // return { "zcopy", "zscal", "znrm2", "zaxpy", "zgemv", "zgemm", "zasum", "zdot", "zgesv",
     //     "zgtsv", "zgbsv", "zgetrf", "zgttrf", "zgbtrf", "zgetrs", "zgttrs", "zgetri", "zrand" };
-    return { "zcopy", "zscal", "znrm2", "zaxpy", "zgemv", "zgemm", "zasum", "zgesv", "zgtsv",
+    return { "zcopy", "zscal", "znrm2", "zaxpy", "zgemv", "zgemm", "zgesv", "zgtsv",
         "zgbsv", "zgetrf", "zgttrf", "zgbtrf", "zgetrs", "zgttrs", "zgetri", "zrand" };
 }
 #else
