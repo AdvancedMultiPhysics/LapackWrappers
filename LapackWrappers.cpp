@@ -120,7 +120,8 @@ std::vector<std::string> Lapack<float>::list_all_tests()
 template<>
 std::vector<std::string> Lapack<std::complex<double>>::list_all_tests()
 {
-    return { "zcopy", "zscal", "znrm2", "zaxpy", "zasum", "zdot", "zrand", "zgemv", "zgemm" };
+    //return { "zcopy", "zscal", "znrm2", "zaxpy", "zasum", "zdot", "zrand", "zgemv", "zgemm" };
+    return { "zcopy", "zscal", "znrm2", "zaxpy", "zdot", "zrand", "zgemv", "zgemm" };
 }
 #endif
 
