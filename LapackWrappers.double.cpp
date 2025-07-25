@@ -334,9 +334,7 @@ void Lapack<double>::gtsv(
 {
 #ifdef USE_ATLAS
     throw std::logic_error( "ATLAS does not support dgtsv" );
-#elif defined( USE_VECLIB )
-    FORTRAN_WRAPPER( ::dgtsv )( &N, &NRHS, DL, D, DU, B, &LDB, &INFO );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     FORTRAN_WRAPPER( ::dgtsv )( &N, &NRHS, DL, D, DU, B, &LDB, &INFO );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t N2 = N, NRHS2 = NRHS, LDB2 = LDB, INFOp;
@@ -353,16 +351,10 @@ void Lapack<double>::gbsv( int N, int KL, int KU, int NRHS, double *AB, int LDAB
 {
 #ifdef USE_ATLAS
     throw std::logic_error( "ATLAS does not support dgbsv" );
-#elif defined( USE_ACML )
+#elif defined( USE_ACML ) ||  defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     d_mutex.lock();
     FORTRAN_WRAPPER( ::dgbsv )( &N, &KL, &KU, &NRHS, AB, &LDAB, IPIV, B, &LDB, &INFO );
     d_mutex.unlock();
-#elif defined( USE_VECLIB )
-    d_mutex.lock();
-    FORTRAN_WRAPPER( ::dgbsv )( &N, &KL, &KU, &NRHS, AB, &LDAB, IPIV, B, &LDB, &INFO );
-    d_mutex.unlock();
-#elif defined( USE_OPENBLAS )
-    FORTRAN_WRAPPER( ::dgbsv )( &N, &KL, &KU, &NRHS, AB, &LDAB, IPIV, B, &LDB, &INFO );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, KLp = KL, KUp = KU, NRHSp = NRHS, LDABp = LDAB, LDBp = LDB, INFOp;
     ptrdiff_t *IPIVp = new ptrdiff_t[N];
@@ -554,10 +546,10 @@ void Lapack<double>::getri(
     INFO = clapack_dgetri( CblasColMajor, N, A, LDA, IPIV );
 #elif defined( USE_ACML )
     ::dgetri_( &N, A, &LDA, (int *) IPIV, WORK, &LWORK, &INFO );
-#elif defined( USE_VECLIB )
+#elif defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
+    d_mutex.lock();
     FORTRAN_WRAPPER( ::dgetri )( &N, A, &LDA, (int *) IPIV, WORK, &LWORK, &INFO );
-#elif defined( USE_OPENBLAS )
-    FORTRAN_WRAPPER( ::dgetri )( &N, A, &LDA, (int *) IPIV, WORK, &LWORK, &INFO );
+    d_mutex.unlock();
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, LDAp = LDA, LWORKp = LWORK, INFOp;
     ptrdiff_t *IPIVp = new ptrdiff_t[N];
@@ -582,10 +574,7 @@ void Lapack<double>::trsm( char SIDE, char UPLO, char TRANS, char DIAG, int M, i
          DIAG2[2] = { DIAG, 0 };
     ::dtrsm_(
         SIDE2, UPLO2, TRANS2, DIAG2, &M, &N, &ALPHA, (double *) A, &LDA, B, &LDB, 1, 1, 1, 1 );
-#elif defined( USE_VECLIB )
-    cblas_dtrsm( CblasColMajor, SIDE2( SIDE ), UPLO2( UPLO ), TRANS2( TRANS ), DIAG2( DIAG ), M, N,
-        ALPHA, (double *) A, LDA, B, LDB );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     cblas_dtrsm( CblasColMajor, SIDE2( SIDE ), UPLO2( UPLO ), TRANS2( TRANS ), DIAG2( DIAG ), M, N,
         ALPHA, (double *) A, LDA, B, LDB );
 #elif defined( USE_MATLAB_LAPACK )

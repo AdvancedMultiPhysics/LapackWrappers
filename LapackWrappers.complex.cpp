@@ -84,13 +84,7 @@ void Lapack<std::complex<double>>::copy(
 {
     auto DX = reinterpret_cast<const Complex *>( DX_ );
     auto DY = reinterpret_cast<Complex *>( DY_ );
-#ifdef USE_ATLAS
-    cblas_zcopy( N, DX, INCX, DY, INCY );
-#elif defined( USE_VECLIB )
-    cblas_zcopy( N, DX, INCX, DY, INCY );
-#elif defined( USE_OPENBLAS )
-    cblas_zcopy( N, DX, INCX, DY, INCY );
-#elif defined( USE_CBLAS )
+#if defined( USE_ATLAS ) || defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     cblas_zcopy( N, DX, INCX, DY, INCY );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Nl = N, INCXl = INCX, INCYl = INCY;
@@ -107,13 +101,7 @@ void Lapack<std::complex<double>>::swap(
 {
     auto DX = reinterpret_cast<Complex *>( DX_ );
     auto DY = reinterpret_cast<Complex *>( DY_ );
-#ifdef USE_ATLAS
-    cblas_zswap( N, DX, INCX, DY, INCY );
-#elif defined( USE_VECLIB )
-    cblas_zswap( N, DX, INCX, DY, INCY );
-#elif defined( USE_OPENBLAS )
-    cblas_zswap( N, DX, INCX, DY, INCY );
-#elif defined( USE_CBLAS )
+#if defined( USE_ATLAS ) || defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     cblas_zswap( N, DX, INCX, DY, INCY );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Nl = N, INCXl = INCX, INCYl = INCY;
@@ -129,13 +117,7 @@ void Lapack<std::complex<double>>::scal(
 {
     auto DA = reinterpret_cast<Complex *>( &DA_ );
     auto DX = reinterpret_cast<Complex *>( DX_ );
-#ifdef USE_ATLAS
-    cblas_zscal( N, DA, DX, INCX );
-#elif defined( USE_VECLIB )
-    cblas_zscal( N, DA, DX, INCX );
-#elif defined( USE_OPENBLAS )
-    cblas_zscal( N, DA, DX, INCX );
-#elif defined( USE_CBLAS )
+#if defined( USE_ATLAS ) || defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     cblas_zscal( N, DA, DX, INCX );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, INCXp = INCX;
@@ -149,13 +131,7 @@ template<>
 double Lapack<std::complex<double>>::nrm2( int N, const std::complex<double> *DX_, int INCX )
 {
     auto DX = reinterpret_cast<const Complex *>( DX_ );
-#ifdef USE_ATLAS
-    return cblas_dznrm2( N, DX, INCX );
-#elif defined( USE_VECLIB )
-    return cblas_dznrm2( N, DX, INCX );
-#elif defined( USE_OPENBLAS )
-    return cblas_dznrm2( N, DX, INCX );
-#elif defined( USE_CBLAS )
+#if defined( USE_ATLAS ) || defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     return cblas_dznrm2( N, DX, INCX );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, INCXp = INCX;
@@ -169,13 +145,7 @@ template<>
 int Lapack<std::complex<double>>::iamax( int N, const std::complex<double> *DX_, int INCX )
 {
     auto DX = reinterpret_cast<const Complex *>( DX_ );
-#ifdef USE_ATLAS
-    return cblas_izamax( N, DX, INCX ) - 1;
-#elif defined( USE_VECLIB )
-    return cblas_izamax( N, DX, INCX ) - 1;
-#elif defined( USE_OPENBLAS )
-    return cblas_izamax( N, DX, INCX ) - 1;
-#elif defined( USE_CBLAS )
+#if defined( USE_ATLAS ) || defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     return cblas_izamax( N, DX, INCX ) - 1;
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, INCXp = INCX;
@@ -192,13 +162,7 @@ void Lapack<std::complex<double>>::axpy( int N, std::complex<double> DA_,
     auto DA = convert( DA_ );
     auto DX = reinterpret_cast<const Complex *>( DX_ );
     auto DY = reinterpret_cast<Complex *>( DY_ );
-#ifdef USE_ATLAS
-    cblas_zaxpy( N, &DA, DX, INCX, DY, INCY );
-#elif defined( USE_VECLIB )
-    cblas_zaxpy( N, &DA, DX, INCX, DY, INCY );
-#elif defined( USE_OPENBLAS )
-    cblas_zaxpy( N, &DA, DX, INCX, DY, INCY );
-#elif defined( USE_CBLAS )
+#if defined( USE_ATLAS ) || defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     cblas_zaxpy( N, &DA, DX, INCX, DY, INCY );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, INCXp = INCX, INCYp = INCY;
@@ -316,8 +280,13 @@ std::complex<double> Lapack<std::complex<double>>::dot(
     return cblas_zdotc( N, DX, INCX, DY, INCY );
 #elif defined( USE_OPENBLAS )
     return cblas_zdotc( N, DX, INCX, DY, INCY );
+#elif defined( USE_CRAY_LIBSCI )
+    std::complex<double> C;
+    auto DC = reinterpret_cast<Complex *>( &C );
+    cblas_zdotc_sub( N, DX, INCX, DY, INCY, DC );
+    return C; 
 #elif defined( USE_CBLAS )
-    return cblas_zdotc( N, DX, INCX, DY, INCY );
+    return cblas_zdotc( N, DX, INCX, DY, INCY ); 
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, INCXp = INCX, INCYp = INCY;
     auto rtn = FORTRAN_WRAPPER( ::zdotc )( &Np, (double *) DX, &INCXp, (double *) DY, &INCYp );
@@ -663,10 +632,7 @@ void Lapack<std::complex<double>>::trsm( char SIDE, char UPLO, char TRANS, char 
          DIAG2[2] = { DIAG, 0 };
     ::ztrsm_( SIDE2, UPLO2, TRANS2, DIAG2, &M, &N, &ALPHA, const_cast<Complex *>( A ), &LDA, B,
         &LDB, 1, 1, 1, 1 );
-#elif defined( USE_VECLIB )
-    cblas_ztrsm( CblasColMajor, SIDE2( SIDE ), UPLO2( UPLO ), TRANS2( TRANS ), DIAG2( DIAG ), M, N,
-        &ALPHA, const_cast<Complex *>( A ), LDA, B, LDB );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     cblas_ztrsm( CblasColMajor, SIDE2( SIDE ), UPLO2( UPLO ), TRANS2( TRANS ), DIAG2( DIAG ), M, N,
         &ALPHA, const_cast<Complex *>( A ), LDA, B, LDB );
 #elif defined( USE_MATLAB_LAPACK )
