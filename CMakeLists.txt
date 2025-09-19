@@ -1,52 +1,50 @@
 # Set some CMake properties
-CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
+CMAKE_MINIMUM_REQUIRED( VERSION 3.21 )
 CMAKE_POLICY( SET CMP0069 NEW )
 
-
 # Print a banner
-MESSAGE("================")
-MESSAGE("Lapack Wrappers ")
-MESSAGE("================")
-
+MESSAGE( "================" )
+MESSAGE( "Lapack Wrappers " )
+MESSAGE( "================" )
 
 # Set the project name
-SET( PROJ LapackWrappers )                  # Set the project name for CMake
-SET( LapackWrappers_LIB LapackWrappers )    # Set the final library name
+SET( PROJ LapackWrappers ) # Set the project name for CMake
+SET( LapackWrappers_LIB LapackWrappers ) # Set the final library name
 
-
-# Initialize the project (should disable languages that the TPL builder will enable)
+# Initialize the project ( should disable languages that the TPL builder will enable )
 PROJECT( ${PROJ} LANGUAGES )
 
-
 # Set the install path
-IF( PREFIX )
+IF ( PREFIX )
     SET( CMAKE_INSTALL_PREFIX ${PREFIX} )
-ELSEIF( INSTALL_DIR )
+ELSEIF ( INSTALL_DIR )
     SET( CMAKE_INSTALL_PREFIX ${INSTALL_DIR} )
-ELSEIF( TPL_INSTALL_DIR )
+ELSEIF ( TPL_INSTALL_DIR )
     SET( CMAKE_INSTALL_PREFIX ${TPL_INSTALL_DIR} )
 ELSE()
     SET( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR} )
 ENDIF()
 SET( ${PROJ}_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} )
 SET( ${PROJ}_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
-MESSAGE("Installing LapackWrappers in: ${CMAKE_INSTALL_PREFIX}")
+MESSAGE( "Installing LapackWrappers in: ${CMAKE_INSTALL_PREFIX}" )
 SET( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH} )
 INCLUDE_DIRECTORIES( "${CMAKE_INSTALL_PREFIX}/include" )
 
-
 # Find blas/lapack
-IF ( TPL_DIRECTORY )
+IF ( ONLY_BUILD_DOCS )
+    INCLUDE( cmake/macros.cmake )
+    INCLUDE( cmake/WriteRepoVersion.cmake )
+ELSEIF ( TPL_DIRECTORY )
     # Use the TPL package to specify blas/lapack
     FIND_PACKAGE( TPLs REQUIRED OPTIONAL_COMPONENTS LAPACK PATHS "${TPL_DIRECTORY}" )
     IF ( NOT DEFINED LAPACK_FOUND )
         SET( DISABLE_BLAS TRUE )
         SET( DISABLE_LAPACK TRUE )
-    ELSEIF ( LAPACK_FOUND AND NOT ( DISABLE_BLAS OR DISABLE_LAPACK ) )
+    ELSEIF ( LAPACK_FOUND AND NOT ( DISABLE_BLAS OR DISABLE_LAPACK ))
         SET( CMAKE_INSTALL_RPATH "${BLAS_DIR}" "${LAPACK_DIR}" ${CMAKE_INSTALL_RPATH} )
         INCLUDE( cmake/WriteLapackHeader.cmake )
-        IF ( (${CMAKE_CXX_COMPILER_ID} MATCHES "CLANG") OR (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang") )
-            SET(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -std=c17 -Wno-c99-extensions")
+        IF ( (${CMAKE_CXX_COMPILER_ID} MATCHES "CLANG" ) OR ( ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" ))
+            SET( CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -std=c17 -Wno-c99-extensions" )
         ENDIF()
     ELSE()
         SET( DISABLE_BLAS TRUE )
@@ -58,7 +56,7 @@ ELSE()
     INCLUDE( cmake/macros.cmake )
     INCLUDE( cmake/WriteRepoVersion.cmake )
     SET_COMPILER_FLAGS()
-    IF ( NOT ( DISABLE_BLAS OR DISABLE_LAPACK ) )
+    IF ( NOT ( DISABLE_BLAS OR DISABLE_LAPACK ))
         FIND_PACKAGE( BlasLapack )
         IF ( LAPACK_FOUND )
             INCLUDE( cmake/WriteLapackHeader.cmake )
@@ -67,6 +65,40 @@ ELSE()
 ENDIF()
 SET( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
 
+# Create the target for documentation
+ADD_CUSTOM_TARGET( doc )
+ADD_CUSTOM_TARGET( latex_docs )
+CHECK_ENABLE_FLAG( USE_DOXYGEN 1 )
+CHECK_ENABLE_FLAG( USE_LATEX 1 )
+FILE( MAKE_DIRECTORY "${${PROJ}_INSTALL_DIR}/doc" )
+IF ( USE_DOXYGEN )
+    SET( DOXY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/doxygen" )
+    SET( DOXYFILE_IN "${${PROJ}_SOURCE_DIR}/doxygen/Doxyfile.in" )
+    SET( DOXY_HEADER_FILE "${${PROJ}_SOURCE_DIR}/doxygen/html/header.html" )
+    SET( DOXY_FOOTER_FILE "${${PROJ}_SOURCE_DIR}/doxygen/html/footer.html" )
+    SET( DOXYFILE_OUTPUT_DIR "${${PROJ}_INSTALL_DIR}/doc" )
+    SET( DOXYFILE_SRC_HTML_DIR "${${PROJ}_SOURCE_DIR}/doxygen/html" )
+    SET( DOXYFILE_SOURCE_DIR "${${PROJ}_SOURCE_DIR}" )
+    SET( REL_PACKAGE_HTML "" )
+    SET( GENERATE_LATEX NO )
+    SET( DOXYGEN_GENERATE_LATEX NO )
+    CONFIGURE_FILE( "${CMAKE_CURRENT_SOURCE_DIR}/doxygen/Doxyfile.in" "${CMAKE_CURRENT_BINARY_DIR}/doxygen.config" @ONLY )
+    FIND_PACKAGE( Doxygen COMPONENTS dot )
+    FIND_PACKAGE( LATEX )
+    IF ( Doxygen_FOUND )
+        DOXYGEN_ADD_DOCS( doxygen "${CMAKE_CURRENT_SOURCE_DIR}" ALL CONFIG_FILE "${CMAKE_CURRENT_BINARY_DIR}/doxygen.config" )
+        ADD_DEPENDENCIES( doxygen latex_docs )
+        ADD_DEPENDENCIES( doc latex_docs doxygen )
+        SET_PROPERTY( TARGET doc PROPERTY EXCLUDE_FROM_ALL TRUE )
+        SET_PROPERTY( TARGET doxygen PROPERTY EXCLUDE_FROM_ALL TRUE )
+        SET_PROPERTY( TARGET latex_docs PROPERTY EXCLUDE_FROM_ALL TRUE )
+    ELSE()
+        SET( USE_DOXYGEN 0 )
+    ENDIF()
+ENDIF()
+IF ( ONLY_BUILD_DOCS )
+    RETURN()
+ENDIF()
 
 # Set shared/static library
 IF ( NOT DEFINED LIB_TYPE )
@@ -77,23 +109,20 @@ IF ( NOT DEFINED LIB_TYPE )
     ENDIF()
 ENDIF()
 
-
-# Set system specific libraries
-# This should move inside the finds for specific lapack libraries
+# Set system specific libraries This should move inside the finds for specific lapack libraries
 IF ( ${CMAKE_SYSTEM_NAME} STREQUAL "Windows" )
     # Windows specific system libraries
-ELSEIF( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+ELSEIF ( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
     # Linux specific system libraries
     SET( SYSTEM_LIBS -lpthread -ldl )
-ELSEIF( ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" )
+ELSEIF ( ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" )
     # Max specific system libraries
     SET( SYSTEM_LIBS -lpthread -ldl )
-ELSEIF( ${CMAKE_SYSTEM_NAME} STREQUAL "Generic" )
+ELSEIF ( ${CMAKE_SYSTEM_NAME} STREQUAL "Generic" )
     # Generic system libraries
 ELSE()
     MESSAGE( FATAL_ERROR "OS not detected" )
 ENDIF()
-
 
 # Set compiler flags
 IF ( NOT CMAKE_CXX_STANDARD )
@@ -103,18 +132,14 @@ IF ( "${CMAKE_CXX_STANDARD}" LESS "17" )
     MESSAGE( FATAL_ERROR "C++17 or newer required" )
 ENDIF()
 
-
 # Update rpath
 SET( CMAKE_INSTALL_RPATH "${${PROJ}_INSTALL_DIR}/lib" ${CMAKE_INSTALL_RPATH} )
-
 
 # Enable tests
 INCLUDE( CTest )
 
-
 # Add distclean target
 ADD_DISTCLEAN( libLapackWrappers.a libLapackWrappers.so blas_lapack.h LapackWrappers-*.*.*.tar.gz )
-
 
 # Check if we want to enable coverage
 IF ( ENABLE_GCOV OR ENABLE_COVERAGE )
@@ -123,14 +148,12 @@ ENDIF()
 IF ( COVERAGE_FOUND )
     SET( ENABLE_COVERAGE true )
     SET( COVERAGE_FLAGS ${COVERAGE_FLAGS} )
-    SET( COVERAGE_LIBS  ${COVERAGE_LIBS} )
+    SET( COVERAGE_LIBS ${COVERAGE_LIBS} )
 ENDIF()
-
 
 # Create a release target
 WRITE_REPO_VERSION()
 CREATE_RELEASE()
-
 
 # Install the library
 FILE( COPY "${${PROJ}_SOURCE_DIR}/LapackWrappers.h" DESTINATION "${${PROJ}_INSTALL_DIR}/include" )
@@ -143,37 +166,24 @@ ELSE()
     SET( LapackWrappersSource LapackWrappers.cpp LapackWrappers.double.cpp LapackWrappers.float.cpp LapackWrappers.complex.cpp LapackWrappersInfo.cpp )
 ENDIF()
 
-
 # Add library
 ADD_LIBRARY( LapackWrappers ${LIB_TYPE} ${LapackWrappersSource} )
 TARGET_LINK_LIBRARIES( LapackWrappers ${BLAS_LAPACK_LINK} ${COVERAGE_LIBS} ${SYSTEM_LIBS} )
 INSTALL( TARGETS LapackWrappers EXPORT LapackWrappersTargets DESTINATION "${${PROJ}_INSTALL_DIR}/lib" )
-INSTALL( EXPORT LapackWrappersTargets
-         FILE LapackWrappersTargets.cmake
-         NAMESPACE LapackWrappers::
-         DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers
-)
+INSTALL( EXPORT LapackWrappersTargets FILE LapackWrappersTargets.cmake NAMESPACE LapackWrappers:: DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers )
 TARGET_COMPILE_DEFINITIONS( LapackWrappers PUBLIC ${COVERAGE_FLAGS} )
-
 
 # Generating a Package Configuration File
 INCLUDE( CMakePackageConfigHelpers )
-SET( INCLUDE_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Location of header files" )
+SET( INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Location of header files" )
 SET( SYSCONFIG_INSTALL_DIR ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers CACHE PATH "Location of configuration files" )
-CONFIGURE_PACKAGE_CONFIG_FILE( cmake/LapackWrappers.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake
-    INSTALL_DESTINATION "${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers"
-    PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR )
-WRITE_BASIC_PACKAGE_VERSION_FILE(
-    ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersVersion.cmake
-    VERSION ${${PROJ}_VERSION}
-    COMPATIBILITY SameMajorVersion )
-INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake
-               ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersVersion.cmake
-         DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers )
-
+CONFIGURE_PACKAGE_CONFIG_FILE( cmake/LapackWrappers.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake
+                              INSTALL_DESTINATION "${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers" PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR )
+WRITE_BASIC_PACKAGE_VERSION_FILE( ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersVersion.cmake VERSION ${${PROJ}_VERSION} COMPATIBILITY SameMajorVersion )
+INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/cmake/LapackWrappersVersion.cmake
+        DESTINATION ${${PROJ}_INSTALL_DIR}/lib/cmake/LapackWrappers )
 
 # Add the tests
-IF (BUILD_TESTING)
+IF ( BUILD_TESTING )
     ADD_SUBDIRECTORY( test )
 ENDIF()

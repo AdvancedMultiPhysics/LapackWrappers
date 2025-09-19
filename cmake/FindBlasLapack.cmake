@@ -1,16 +1,14 @@
 # FindBlasLapack
 # ---------
 #
-# Find blas/lapack libraries 
+# Find blas/lapack libraries
 #
 # Use this module by invoking find_package with the form:
 #
-#   find_package( FindBlasLapack )
+# find_package( FindBlasLapack )
 #
-# This module finds headers and requested component libraries for 
-#    different BLAS/LAPACK libraries.
+# This module finds headers and requested component libraries for different BLAS/LAPACK libraries.
 #
-
 
 # Check the install directory
 IF ( NOT LAPACK_INSTALL_DIR )
@@ -20,58 +18,55 @@ IF ( NOT EXISTS "${LAPACK_INSTALL_DIR}" )
     MESSAGE( FATAL_ERROR "Path does not exist: ${LAPACK_INSTALL_DIR}" )
 ENDIF()
 
-
 # Begin search
 INCLUDE( cmake/LAPACK_macros.cmake )
 SET( BLAS_LAPACK_LINK )
 IF ( USE_MATLAB_LAPACK )
     SET( LAPACK_VENDOR "MATLAB" )
-    SET( BLAS_FOUND     TRUE )
-    SET( LAPACK_FOUND   TRUE )
-    SET( BLAS_DIR    "${MATLAB_EXTERN}" )
-    SET( BLAS_DIR    "${MATLAB_EXTERN}" )
-    SET( LAPACK_DIR  "${MATLAB_EXTERN}" )
-    SET( BLAS_LIBS   "${MATLAB_BLAS_LIBRARY}" )
+    SET( BLAS_FOUND TRUE )
+    SET( LAPACK_FOUND TRUE )
+    SET( BLAS_DIR "${MATLAB_EXTERN}" )
+    SET( BLAS_DIR "${MATLAB_EXTERN}" )
+    SET( LAPACK_DIR "${MATLAB_EXTERN}" )
+    SET( BLAS_LIBS "${MATLAB_BLAS_LIBRARY}" )
     SET( LAPACK_LIBS "${MATLAB_LAPACK_LIBRARY}" )
     SET( BLAS_LAPACK_LINK "${MATLAB_LAPACK_LIBRARY}" "${MATLAB_BLAS_LIBRARY}" )
 ENDIF()
-IF ( ( (NOT BLAS_FOUND) OR (NOT LAPACK_FOUND) ) AND (NOT DISABLE_ACML) )
+IF ( (( NOT BLAS_FOUND ) OR ( NOT LAPACK_FOUND )) AND ( NOT DISABLE_ACML ))
     CHECK_ACML( "${LAPACK_INSTALL_DIR}" "${LAPACK_OUT}" )
 ENDIF()
-IF ( ( (NOT BLAS_FOUND) OR (NOT LAPACK_FOUND) ) AND (NOT DISABLE_ONEAPI) )
-    #CHECK_ONEAPI( "${LAPACK_INSTALL_DIR}" "${LAPACK_OUT}" )
+IF ( (( NOT BLAS_FOUND ) OR ( NOT LAPACK_FOUND )) AND ( NOT DISABLE_ONEAPI ))
+    # CHECK_ONEAPI( "${LAPACK_INSTALL_DIR}" "${LAPACK_OUT}" )
 ENDIF()
-IF ( ( (NOT BLAS_FOUND) OR (NOT LAPACK_FOUND) ) AND (NOT DISABLE_MKL) )
+IF ( (( NOT BLAS_FOUND ) OR ( NOT LAPACK_FOUND )) AND ( NOT DISABLE_MKL ))
     CHECK_MKL( "${LAPACK_INSTALL_DIR}" "${LAPACK_OUT}" )
 ENDIF()
-IF ( ( (NOT BLAS_FOUND) OR (NOT LAPACK_FOUND) ) AND (NOT DISABLE_VECLIB) )
+IF ( (( NOT BLAS_FOUND ) OR ( NOT LAPACK_FOUND )) AND ( NOT DISABLE_VECLIB ))
     CHECK_VECLIB( "${LAPACK_INSTALL_DIR}" "${LAPACK_OUT}" )
 ENDIF()
-IF ( ( (NOT BLAS_FOUND) OR (NOT LAPACK_FOUND) ) AND (NOT DISABLE_LIBSCI) )
+IF ( (( NOT BLAS_FOUND ) OR ( NOT LAPACK_FOUND )) AND ( NOT DISABLE_LIBSCI ))
     CHECK_CRAY_LIBSCI( "${LAPACK_INSTALL_DIR}" "${LAPACK_OUT}" )
 ENDIF()
-IF ( ( (NOT BLAS_FOUND) OR (NOT LAPACK_FOUND) ) AND (NOT DISABLE_OPENBLAS) )
+IF ( (( NOT BLAS_FOUND ) OR ( NOT LAPACK_FOUND )) AND ( NOT DISABLE_OPENBLAS ))
     CHECK_OPENBLAS( "${LAPACK_INSTALL_DIR}" "${LAPACK_OUT}" )
 ENDIF()
-IF ( (NOT BLAS_FOUND) OR (NOT LAPACK_FOUND) )
+IF ( (NOT BLAS_FOUND ) OR ( NOT LAPACK_FOUND ))
     CHECK_DEFAULT( "${LAPACK_INSTALL_DIR}" "${LAPACK_OUT}" )
 ENDIF()
-IF ( (NOT BLAS_FOUND) OR (NOT LAPACK_FOUND) )
-    MESSAGE(FATAL_ERROR "No sutable blas or lapack libraries found in ${LAPACK_INSTALL_DIR}")
+IF ( (NOT BLAS_FOUND ) OR ( NOT LAPACK_FOUND ))
+    MESSAGE( FATAL_ERROR "No sutable blas or lapack libraries found in ${LAPACK_INSTALL_DIR}" )
 ENDIF()
-
 
 # Check that some variables are set
 IF ( NOT LAPACK_VENDOR )
-    MESSAGE(FATAL_ERROR "Internal error: LAPACK_VENDOR not set" )
+    MESSAGE( FATAL_ERROR "Internal error: LAPACK_VENDOR not set" )
 ENDIF()
 IF ( NOT BLAS_FOUND )
-    MESSAGE(FATAL_ERROR "Internal error: BLAS_FOUND not set" )
+    MESSAGE( FATAL_ERROR "Internal error: BLAS_FOUND not set" )
 ENDIF()
 IF ( NOT LAPACK_FOUND )
-    MESSAGE(FATAL_ERROR "Internal error: LAPACK_FOUND not set" )
+    MESSAGE( FATAL_ERROR "Internal error: LAPACK_FOUND not set" )
 ENDIF()
-
 
 # Print some variables
 MESSAGE( "LAPACK_FOUND: ${LAPACK_FOUND}" )
@@ -83,6 +78,3 @@ MESSAGE( "LAPACK_INCLUDE_DIRS: ${LAPACK_INCLUDE_DIRS}" )
 MESSAGE( "BLAS_LIBS ${BLAS_LIBS}" )
 MESSAGE( "LAPACK_LIBS: ${LAPACK_LIBS}" )
 MESSAGE( "BLAS_LAPACK_LINK: ${BLAS_LAPACK_LINK}" )
-
-
-
