@@ -74,8 +74,11 @@ void Lapack<TYPE>::swap( int N, TYPE *DX, int INCX, TYPE *DY, int INCY )
 {
     auto X = DX;
     auto Y = DY;
-    for ( int i = 0; i < N; i++, X += INCX, Y += INCY )
-        *Y = *X;
+    for ( int i = 0; i < N; i++, X += INCX, Y += INCY ) {
+        TYPE Z = *Y;
+        *Y     = *X;
+        *X     = Z;
+    }
 }
 template<class TYPE>
 void Lapack<TYPE>::scal( int N, TYPE DA, TYPE *DX, int INCX )
@@ -99,8 +102,8 @@ int Lapack<TYPE>::iamax( int N, const TYPE *DX, int INCX )
     if ( N <= 1 )
         return N;
     int k  = 0;
-    auto X = DX;
-    auto y = std::abs( *X );
+    auto X = DX + INCX;
+    auto y = std::abs( *DX );
     for ( int i = 1; i < N; i++, X += INCX ) {
         auto x = std::abs( *X );
         if ( x > y ) {

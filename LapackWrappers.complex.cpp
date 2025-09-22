@@ -284,9 +284,9 @@ std::complex<double> Lapack<std::complex<double>>::dot(
     std::complex<double> C;
     auto DC = reinterpret_cast<Complex *>( &C );
     cblas_zdotc_sub( N, DX, INCX, DY, INCY, DC );
-    return C; 
+    return C;
 #elif defined( USE_CBLAS )
-    return cblas_zdotc( N, DX, INCX, DY, INCY ); 
+    return cblas_zdotc( N, DX, INCX, DY, INCY );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, INCXp = INCX, INCYp = INCY;
     auto rtn = FORTRAN_WRAPPER( ::zdotc )( &Np, (double *) DX, &INCXp, (double *) DY, &INCYp );

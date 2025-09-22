@@ -575,7 +575,7 @@ void Lapack<float>::trsm( char SIDE, char UPLO, char TRANS, char DIAG, int M, in
     char SIDE2[2] = { SIDE, 0 }, UPLO2[2] = { UPLO, 0 }, TRANS2[2] = { TRANS, 0 },
          DIAG2[2] = { DIAG, 0 };
     ::strsm_( SIDE2, UPLO2, TRANS2, DIAG2, &M, &N, &ALPHA, (float *) A, &LDA, B, &LDB, 1, 1, 1, 1 );
-#elif defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined ( USE_CBLAS )
+#elif defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
     cblas_strsm( CblasColMajor, SIDE2( SIDE ), UPLO2( UPLO ), TRANS2( TRANS ), DIAG2( DIAG ), M, N,
         ALPHA, (float *) A, LDA, B, LDB );
 #elif defined( USE_MATLAB_LAPACK )

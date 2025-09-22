@@ -351,7 +351,8 @@ void Lapack<double>::gbsv( int N, int KL, int KU, int NRHS, double *AB, int LDAB
 {
 #ifdef USE_ATLAS
     throw std::logic_error( "ATLAS does not support dgbsv" );
-#elif defined( USE_ACML ) ||  defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || defined( USE_CBLAS )
+#elif defined( USE_ACML ) || defined( USE_VECLIB ) || defined( USE_OPENBLAS ) || \
+    defined( USE_CBLAS )
     d_mutex.lock();
     FORTRAN_WRAPPER( ::dgbsv )( &N, &KL, &KU, &NRHS, AB, &LDAB, IPIV, B, &LDB, &INFO );
     d_mutex.unlock();

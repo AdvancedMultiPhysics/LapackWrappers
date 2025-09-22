@@ -6,6 +6,7 @@
 #include <cmath>
 #include <complex>
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <limits>
 #include <mutex>
@@ -90,38 +91,45 @@ template<>
 std::vector<std::string> Lapack<double>::list_all_tests()
 {
     return { "dcopy", "dscal", "dnrm2", "daxpy", "dgemv", "dgemm", "dasum", "ddot", "dgesv",
-        "dgtsv", "dgbsv", "dgetrf", "dgttrf", "dgbtrf", "dgetrs", "dgttrs", "dgetri", "drand" };
+        "dgtsv", "dgbsv", "dgetrf", "dgttrf", "dgbtrf", "dgetrs", "dgttrs", "dgetri", "drand",
+        "dswap", "idamax" };
 }
 template<>
 std::vector<std::string> Lapack<float>::list_all_tests()
 {
     return { "scopy", "sscal", "snrm2", "saxpy", "sgemv", "sgemm", "sasum", "sdot", "sgesv",
-        "sgtsv", "sgbsv", "sgetrf", "sgttrf", "sgbtrf", "sgetrs", "sgttrs", "sgetri", "srand" };
+        "sgtsv", "sgbsv", "sgetrf", "sgttrf", "sgbtrf", "sgetrs", "sgttrs", "sgetri", "srand",
+        "sswap", "isamax" };
 }
 template<>
 std::vector<std::string> Lapack<std::complex<double>>::list_all_tests()
 {
     // return { "zcopy", "zscal", "znrm2", "zaxpy", "zgemv", "zgemm", "zasum", "zdot", "zgesv",
-    //     "zgtsv", "zgbsv", "zgetrf", "zgttrf", "zgbtrf", "zgetrs", "zgttrs", "zgetri", "zrand" };
+    //     "zgtsv", "zgbsv", "zgetrf", "zgttrf", "zgbtrf", "zgetrs", "zgttrs", "zgetri", "zrand",
+    //     "zswap", "izamax" };
     return { "zcopy", "zscal", "znrm2", "zaxpy", "zgemv", "zgemm", "zgesv", "zgtsv", "zgbsv",
-        "zgetrf", "zgttrf", "zgbtrf", "zgetrs", "zgttrs", "zgetri", "zrand" };
+        "zgetrf", "zgttrf", "zgbtrf", "zgetrs", "zgttrs", "zgetri", "zrand", "zswap", "izamax" };
 }
 #else
 template<>
 std::vector<std::string> Lapack<double>::list_all_tests()
 {
-    return { "dcopy", "dscal", "dnrm2", "daxpy", "dasum", "ddot", "drand", "dgemv", "dgemm" };
+    return { "dcopy", "dscal", "dnrm2", "daxpy", "dasum", "ddot", "drand", "dgemv", "dgemm",
+        "dswap", "idamax" };
 }
 template<>
 std::vector<std::string> Lapack<float>::list_all_tests()
 {
-    return { "scopy", "sscal", "snrm2", "saxpy", "sasum", "sdot", "srand", "sgemv", "sgemm" };
+    return { "scopy", "sscal", "snrm2", "saxpy", "sasum", "sdot", "srand", "sgemv", "sgemm",
+        "zswap", "isamax" };
 }
 template<>
 std::vector<std::string> Lapack<std::complex<double>>::list_all_tests()
 {
-    //return { "zcopy", "zscal", "znrm2", "zaxpy", "zasum", "zdot", "zrand", "zgemv", "zgemm" };
-    return { "zcopy", "zscal", "znrm2", "zaxpy", "zdot", "zrand", "zgemv", "zgemm" };
+    // return { "zcopy", "zscal", "znrm2", "zaxpy", "zasum", "zdot", "zrand", "zgemv", "zgemm",
+    // "zswap", "izamax" };
+    return { "zcopy", "zscal", "znrm2", "zaxpy", "zdot", "zrand", "zgemv", "zgemm", "zswap",
+        "izamax" };
 }
 #endif
 
@@ -377,7 +385,7 @@ static bool test_random( int N, double &error )
     error = 0;
     if constexpr ( std::is_floating_point<TYPE>::value ) {
         constexpr int Nb  = 25;  // Number of bins
-        constexpr int Nit = 100; // Number of tests to run
+        constexpr int Nit = 100; // Number of tests tcstringo run
         int K             = N * 1000;
         TYPE *x           = new TYPE[K];
         bool rangeError   = false;
@@ -410,6 +418,65 @@ static bool test_random( int N, double &error )
     } else {
         throw std::logic_error( "Not finihsed" );
     }
+}
+
+
+// Test swap
+template<typename TYPE>
+static bool test_swap( int N, double &error )
+{
+    constexpr int K = TEST_SIZE_VEC;
+    TYPE *x1        = new TYPE[2 * K];
+    TYPE *x2        = new TYPE[3 * K];
+    TYPE *y1        = new TYPE[2 * K];
+    TYPE *y2        = new TYPE[3 * K];
+    Lapack<TYPE>::random( 2 * K, x1 );
+    Lapack<TYPE>::random( 3 * K, x2 );
+    for ( int i = 0; i < N; i++ ) {
+        memcpy( y1, x1, 2 * K * sizeof( TYPE ) );
+        memcpy( y2, x2, 3 * K * sizeof( TYPE ) );
+        Lapack<TYPE>::swap( K, y1, 2, y2, 3 );
+    }
+    bool pass = true;
+    for ( int k = 0, k1 = 0, k2 = 0; k < K; k++, k1 += 2, k2 += 3 )
+        pass = pass && y2[k2] == x1[k1] && y1[k1] == x2[k2];
+    delete[] x1;
+    delete[] x2;
+    delete[] y1;
+    delete[] y2;
+    error = 0;
+    if ( !pass )
+        error = 1;
+    return pass;
+}
+
+
+// Test idamax
+template<typename TYPE>
+static bool test_iamax( int N, double &error )
+{
+    constexpr int K = TEST_SIZE_VEC;
+    TYPE *x         = new TYPE[K];
+    Lapack<TYPE>::random( K, x );
+    auto MAX  = std::abs( x[0] );
+    int index = 0;
+    for ( int i = 0; i < K; i++ ) {
+        if ( std::abs( x[i] ) > MAX ) {
+            MAX   = std::abs( x[i] );
+            index = i;
+        }
+        if ( i % 2 == 0 )
+            x[i] = -x[i];
+    }
+    bool pass = true;
+    for ( int i = 0; i < N; i++ ) {
+        int j = Lapack<TYPE>::iamax( K, x, 1 );
+        pass  = pass && j == index;
+    }
+    error = 0;
+    if ( !pass )
+        error = 1;
+    return pass;
 }
 
 
@@ -1271,6 +1338,10 @@ bool Lapack<TYPE>::run_test( const std::string &routine, int N, double &error )
         pass = test_getri<TYPE>( N, error );
     } else if ( name == "rand" ) {
         pass = test_random<TYPE>( N, error );
+    } else if ( name == "swap" ) {
+        pass = test_swap<TYPE>( N, error );
+    } else if ( name == "damax" || name == "samax" || name == "zamax" ) {
+        pass = test_iamax<TYPE>( N, error );
     } else {
         std::cerr << "Unknown test: " << name << std::endl;
         return false;
