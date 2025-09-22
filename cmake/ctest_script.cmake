@@ -1,5 +1,7 @@
-# ctest script for building, running, and submitting the test results Usage:  ctest -S script,build build = debug / optimized / valgrind / continuous Note: this test will use use
-# the number of processors defined in the variable N_PROCS, the environmental variable N_PROCS, or the number of processors available ( if not specified )
+# ctest script for building, running, and submitting the test results
+#    Usage:  ctest -S script,build build = debug / optimized / valgrind / continuous
+#    Note: this test will use use the number of processors defined in the variable N_PROCS,
+#       the environmental variable N_PROCS, or the number of processors available (if not specified)
 
 # Set the Project variables
 SET( PROJ LapackWrappers )
@@ -107,8 +109,8 @@ IF ( NOT DEFINED N_PROCS )
     ENDIF()
 ENDIF()
 
-# Set the nightly start time This controls the version of a checkout from cvs/svn ( ignored for mecurial/git ) This does not control the start of the day displayed on CDash, that is
-# controled by the CDash project settings
+# Set the nightly start time This controls the version of a checkout from cvs/svn ( ignored for mecurial/git ) This does not control the start of the day displayed on CDash, that
+# is controled by the CDash project settings
 SET( NIGHTLY_START_TIME "$ENV{NIGHTLY_START_TIME}" )
 IF ( NOT NIGHTLY_START_TIME )
     SET( NIGHTLY_START_TIME "18:00:00 EST" )
@@ -145,8 +147,7 @@ ELSE()
     SET( CTEST_TEST_TIMEOUT 120 )
 ENDIF()
 
-# Set valgrind options SET ( VALGRIND_COMMAND_OPTIONS "--tool=memcheck --leak-check=yes --track-fds=yes --num-callers=50 --show-reachable=yes --track-origins=yes --malloc-fill=0xff
-# --free-fill=0xfe --suppressions=${${PROJ}_SOURCE_DIR}/ValgrindSuppresionFile" )
+# Set valgrind options SET ( VALGRIND_COMMAND_OPTIONS "--tool=memcheck --leak-check=yes --track-fds=yes --num-callers=50 --show-reachable=yes --track-origins=yes --malloc-fill=0xff --free-fill=0xfe --suppressions=${${PROJ}_SOURCE_DIR}/ValgrindSuppresionFile" )
 SET( VALGRIND_COMMAND_OPTIONS "--tool=memcheck --leak-check=yes --track-fds=yes --num-callers=50 --show-reachable=yes --suppressions=${${PROJ}_SOURCE_DIR}/ValgrindSuppresionFile" )
 IF ( USE_VALGRIND )
     SET( MEMORYCHECK_COMMAND ${VALGRIND_COMMAND} )
