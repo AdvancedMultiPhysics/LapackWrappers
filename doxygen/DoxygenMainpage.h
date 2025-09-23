@@ -2,7 +2,7 @@
  *
  * This is a set of utilities for providing a templated interface for Lapack/Blas
  *
- *   - \ref LapackWrappers "Lapack Wrappers"
+ *   - \ref Lapack "Lapack Wrappers"
  *
  * \author Mark Berrill
  */
