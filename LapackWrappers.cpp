@@ -473,6 +473,7 @@ static bool test_iamax( int N, double &error )
         int j = Lapack<TYPE>::iamax( K, x, 1 );
         pass  = pass && j == index;
     }
+    delete [] x;
     error = 0;
     if ( !pass )
         error = 1;
