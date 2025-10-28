@@ -123,6 +123,12 @@ ELSEIF ( ${CMAKE_SYSTEM_NAME} STREQUAL "Generic" )
 ELSE()
     MESSAGE( FATAL_ERROR "OS not detected" )
 ENDIF()
+INCLUDE( CheckLinkerFlag )
+CHECK_LINKER_FLAG( CXX "-lgfortran" test CMAKE_REQUIRED_QUIET )
+IF ( test )
+    SET( SYSTEM_LIBS -lgfortran ${SYSTEM_LIBS} )
+ENDIF()
+MESSAGE( "SYSTEM_LIBS=${SYSTEM_LIBS}" )
 
 # Set compiler flags
 IF ( NOT CMAKE_CXX_STANDARD )
