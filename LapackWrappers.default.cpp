@@ -154,8 +154,13 @@ void Lapack<TYPE>::gemv( char TRANS, int M, int N, TYPE alpha, const TYPE *A, in
     bool trans = getTrans( TRANS );
     int Nx     = trans ? M : N;
     int Ny     = trans ? N : M;
-    for ( int i = 0, iy = 0; i < Ny; i++, iy += INCY )
-        DY[iy] = beta * DY[iy];
+    if ( beta == TYPE( 0 ) ) {
+        for ( int i = 0, iy = 0; i < Ny; i++, iy += INCY )
+            DY[iy] = TYPE( 0 );
+    } else {
+        for ( int i = 0, iy = 0; i < Ny; i++, iy += INCY )
+            DY[iy] = beta * DY[iy];
+    }
     constexpr TYPE zero( 0 );
     if ( alpha == zero )
         return;
@@ -189,8 +194,13 @@ void Lapack<TYPE>::gemm( char TRANSA, char TRANSB, int M, int N, int K, TYPE alp
     ASSERT( LDA >= std::max( 1, nrowa ) );
     ASSERT( LDB >= std::max( 1, nrowb ) );
     ASSERT( LDC >= std::max( 1, M ) );
-    for ( int i = 0; i < N * M; i++ )
-        C[i] = beta * C[i];
+    if ( beta == TYPE( 0 ) ) {
+        for ( int i = 0; i < N * M; i++ )
+            C[i] = TYPE( 0 );
+    } else {
+        for ( int i = 0; i < N * M; i++ )
+            C[i] = beta * C[i];
+    }
     constexpr TYPE zero( 0 );
     if ( alpha == zero )
         return;
