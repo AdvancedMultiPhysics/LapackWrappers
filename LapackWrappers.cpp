@@ -767,7 +767,7 @@ static bool test_gesv( int N, double &error )
 template<typename TYPE>
 static bool test_gtsv( int N, double &error )
 {
-    // Test solving a tri-diagonal matrix by comparing to dgtsv
+    // Test solving a tri-diagonal matrix by comparing to gesv
     const int K = TEST_SIZE_TRI_MAT / 2;
     TYPE *A     = new TYPE[K * K];
     TYPE *D     = new TYPE[K];
@@ -823,7 +823,7 @@ static bool test_gtsv( int N, double &error )
 template<typename TYPE>
 static bool test_gbsv( int N, double &error )
 {
-    // Test solving a banded-diagonal matrix by comparing to dgtsv
+    // Test solving a banded-diagonal matrix by comparing to gtsv
     //    N = 6, KL = 2, KU = 1:
     //        *    *    *    +    +    +
     //        *    *    +    +    +    +
