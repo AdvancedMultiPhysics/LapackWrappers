@@ -501,7 +501,7 @@ void Lapack<std::complex<double>>::getrs( char TRANS, int N, int NRHS,
 #elif defined( USE_VECLIB )
     FORTRAN_WRAPPER( ::zgetrs )
     ( &TRANS, &N, &NRHS, const_cast<Complex *>( A ), &LDA, (int *) IPIV, B, &LDB, &INFO );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_OPENBLAS ) || defined( USE_CRAY_LIBSCI )
     FORTRAN_WRAPPER( ::zgetrs )
     ( &TRANS, &N, &NRHS, const_cast<Complex *>( A ), &LDA, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
@@ -536,7 +536,7 @@ void Lapack<std::complex<double>>::gttrs( char TRANS, int N, int NRHS,
 #elif defined( USE_VECLIB )
     FORTRAN_WRAPPER( ::zgttrs )
     ( &TRANS, &N, &NRHS, DL, D, DU, DU2, (int *) IPIV, B, &LDB, &INFO );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_OPENBLAS ) || defined( USE_CRAY_LIBSCI )
     FORTRAN_WRAPPER( ::zgttrs )
     ( &TRANS, &N, &NRHS, DL, D, DU, DU2, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
@@ -571,7 +571,7 @@ void Lapack<std::complex<double>>::gbtrs( char TRANS, int N, int KL, int KU, int
     FORTRAN_WRAPPER( ::zgbtrs )
     ( &TRANS, &N, &KL, &KU, &NRHS, const_cast<Complex *>( AB ), &LDAB, (int *) IPIV, B, &LDB,
         &INFO );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_OPENBLAS ) || defined( USE_CRAY_LIBSCI )
     FORTRAN_WRAPPER( ::zgbtrs )
     ( &TRANS, &N, &KL, &KU, &NRHS, const_cast<Complex *>( AB ), &LDAB, (int *) IPIV, B, &LDB, &INFO,
         1 );
