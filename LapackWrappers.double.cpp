@@ -58,7 +58,7 @@ double Lapack<double>::lamch( char cmach )
     return ::dlamch( cmach );
 #elif defined( USE_VECLIB )
     return FORTRAN_WRAPPER( ::dlamch )( &cmach );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_OPENBLAS ) || defined( USE_CRAY_LIBSCI )
     return FORTRAN_WRAPPER( ::dlamch )( &cmach, 1 );
 #elif defined( USE_LAPACKE )
     return ::LAPACKE_dlamch( cmach );
@@ -456,7 +456,7 @@ void Lapack<double>::getrs( char TRANS, int N, int NRHS, const double *A, int LD
 #elif defined( USE_VECLIB )
     FORTRAN_WRAPPER( ::dgetrs )
     ( &TRANS, &N, &NRHS, (double *) A, &LDA, (int *) IPIV, B, &LDB, &INFO );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_OPENBLAS ) || defined( USE_CRAY_LIBSCI )
     FORTRAN_WRAPPER( ::dgetrs )
     ( &TRANS, &N, &NRHS, (double *) A, &LDA, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
@@ -487,7 +487,7 @@ void Lapack<double>::gttrs( char TRANS, int N, int NRHS, const double *DL, const
     FORTRAN_WRAPPER( ::dgttrs )
     ( &TRANS, &N, &NRHS, (double *) DL, (double *) D, (double *) DU, (double *) DU2, (int *) IPIV,
         B, &LDB, &INFO );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_OPENBLAS ) || defined( USE_CRAY_LIBSCI )
     FORTRAN_WRAPPER( ::dgttrs )
     ( &TRANS, &N, &NRHS, (double *) DL, (double *) D, (double *) DU, (double *) DU2, (int *) IPIV,
         B, &LDB, &INFO, 1 );
@@ -519,7 +519,7 @@ void Lapack<double>::gbtrs( char TRANS, int N, int KL, int KU, int NRHS, const d
 #elif defined( USE_VECLIB )
     FORTRAN_WRAPPER( ::dgbtrs )
     ( &TRANS, &N, &KL, &KU, &NRHS, (double *) AB, &LDAB, (int *) IPIV, B, &LDB, &INFO );
-#elif defined( USE_OPENBLAS )
+#elif defined( USE_OPENBLAS ) || defined( USE_CRAY_LIBSCI )
     FORTRAN_WRAPPER( ::dgbtrs )
     ( &TRANS, &N, &KL, &KU, &NRHS, (double *) AB, &LDAB, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
