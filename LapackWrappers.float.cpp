@@ -60,6 +60,8 @@ float Lapack<float>::lamch( char cmach )
     return FORTRAN_WRAPPER( ::slamch )( &cmach );
 #elif defined( USE_OPENBLAS )
     return FORTRAN_WRAPPER( ::slamch )( &cmach, 1 );
+#elif defined( LAPACK_FORTRAN_STRLEN_END )
+    return FORTRAN_WRAPPER( ::slamch )( &cmach, 1 );
 #elif defined( USE_LAPACKE )
     return ::LAPACKE_slamch( cmach );
 #else
@@ -456,6 +458,9 @@ void Lapack<float>::getrs( char TRANS, int N, int NRHS, const float *A, int LDA,
 #elif defined( USE_OPENBLAS )
     FORTRAN_WRAPPER( ::sgetrs )
     ( &TRANS, &N, &NRHS, (float *) A, &LDA, (int *) IPIV, B, &LDB, &INFO, 1 );
+#elif defined( LAPACK_FORTRAN_STRLEN_END )
+    FORTRAN_WRAPPER( ::sgetrs )
+    ( &TRANS, &N, &NRHS, (float *) A, &LDA, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_LAPACKE )
     FORTRAN_WRAPPER( ::sgetrs )
     ( &TRANS, &N, &NRHS, (float *) A, &LDA, (int *) IPIV, B, &LDB, &INFO );
@@ -491,6 +496,10 @@ void Lapack<float>::gttrs( char TRANS, int N, int NRHS, const float *DL, const f
     FORTRAN_WRAPPER( ::sgttrs )
     ( &TRANS, &N, &NRHS, (float *) DL, (float *) D, (float *) DU, (float *) DU2, (int *) IPIV, B,
         &LDB, &INFO, 1 );
+#elif defined( LAPACK_FORTRAN_STRLEN_END )
+    FORTRAN_WRAPPER( ::sgttrs )
+    ( &TRANS, &N, &NRHS, (float *) DL, (float *) D, (float *) DU, (float *) DU2, (int *) IPIV, B,
+        &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, NRHSp = NRHS, LDBp = LDB, INFOp;
     ptrdiff_t *IPIVp = new ptrdiff_t[N];
@@ -521,6 +530,9 @@ void Lapack<float>::gbtrs( char TRANS, int N, int KL, int KU, int NRHS, const fl
     FORTRAN_WRAPPER( ::sgbtrs )
     ( &TRANS, &N, &KL, &KU, &NRHS, (float *) AB, &LDAB, (int *) IPIV, B, &LDB, &INFO );
 #elif defined( USE_OPENBLAS )
+    FORTRAN_WRAPPER( ::sgbtrs )
+    ( &TRANS, &N, &KL, &KU, &NRHS, (float *) AB, &LDAB, (int *) IPIV, B, &LDB, &INFO, 1 );
+#elif defined( LAPACK_FORTRAN_STRLEN_END )
     FORTRAN_WRAPPER( ::sgbtrs )
     ( &TRANS, &N, &KL, &KU, &NRHS, (float *) AB, &LDAB, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )

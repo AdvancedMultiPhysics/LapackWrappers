@@ -504,6 +504,9 @@ void Lapack<std::complex<double>>::getrs( char TRANS, int N, int NRHS,
 #elif defined( USE_OPENBLAS )
     FORTRAN_WRAPPER( ::zgetrs )
     ( &TRANS, &N, &NRHS, const_cast<Complex *>( A ), &LDA, (int *) IPIV, B, &LDB, &INFO, 1 );
+#elif defined( LAPACK_FORTRAN_STRLEN_END )
+    FORTRAN_WRAPPER( ::zgetrs )
+    ( &TRANS, &N, &NRHS, const_cast<Complex *>( A ), &LDA, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, NRHSp = NRHS, LDAp = LDA, LDBp = LDB, INFOp;
     ptrdiff_t *IPIVp = new ptrdiff_t[N];
@@ -539,6 +542,9 @@ void Lapack<std::complex<double>>::gttrs( char TRANS, int N, int NRHS,
 #elif defined( USE_OPENBLAS )
     FORTRAN_WRAPPER( ::zgttrs )
     ( &TRANS, &N, &NRHS, DL, D, DU, DU2, (int *) IPIV, B, &LDB, &INFO, 1 );
+#elif defined( LAPACK_FORTRAN_STRLEN_END )
+    FORTRAN_WRAPPER( ::zgttrs )
+    ( &TRANS, &N, &NRHS, DL, D, DU, DU2, (int *) IPIV, B, &LDB, &INFO, 1 );
 #elif defined( USE_MATLAB_LAPACK )
     ptrdiff_t Np = N, NRHSp = NRHS, LDBp = LDB, INFOp;
     ptrdiff_t *IPIVp = new ptrdiff_t[N];
@@ -572,6 +578,10 @@ void Lapack<std::complex<double>>::gbtrs( char TRANS, int N, int KL, int KU, int
     ( &TRANS, &N, &KL, &KU, &NRHS, const_cast<Complex *>( AB ), &LDAB, (int *) IPIV, B, &LDB,
         &INFO );
 #elif defined( USE_OPENBLAS )
+    FORTRAN_WRAPPER( ::zgbtrs )
+    ( &TRANS, &N, &KL, &KU, &NRHS, const_cast<Complex *>( AB ), &LDAB, (int *) IPIV, B, &LDB, &INFO,
+        1 );
+#elif defined( LAPACK_FORTRAN_STRLEN_END )
     FORTRAN_WRAPPER( ::zgbtrs )
     ( &TRANS, &N, &KL, &KU, &NRHS, const_cast<Complex *>( AB ), &LDAB, (int *) IPIV, B, &LDB, &INFO,
         1 );
